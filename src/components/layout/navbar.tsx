@@ -1,11 +1,35 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Aperture, Menu, X } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Aperture,
+  Menu,
+  X,
+  UserRound,
+  LayoutDashboard,
+  PlusCircle,
+  Building2,
+  CalendarDays,
+  LogOut,
+  ChevronDown,
+  Loader2,
+} from "lucide-react";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSession, signOut } from "@/lib/auth-client";
 
 const links = [
   { label: "Home", href: "/" },
@@ -14,15 +38,184 @@ const links = [
   { label: "About Us", href: "/#about" },
 ];
 
+const dashboardLinks = [
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Add New Studio",
+    href: "/add-studio",
+    icon: PlusCircle,
+  },
+  {
+    label: "My Studio Listings",
+    href: "/my-studios",
+    icon: Building2,
+  },
+  {
+    label: "My Bookings",
+    href: "/my-bookings",
+    icon: CalendarDays,
+  },
+];
+type ProfileMenuProps = {
+  user: {
+    name?: string | null;
+    email: string;
+    image?: string | null;
+  };
+  loggingOut: boolean;
+  onLogout: () => void;
+};
+
+function ProfileMenu({ user, loggingOut, onLogout }: ProfileMenuProps) {
+  const pathname = usePathname();
+
+  const displayName = user.name?.trim() || "User";
+  const initials =
+    displayName
+      .split(/\s+/)
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "U";
+
+  const dashboardLinks = [
+    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Add New Studio", href: "/add-studio", icon: PlusCircle },
+    { label: "My Studio Listings", href: "/my-studios", icon: Building2 },
+    { label: "My Bookings", href: "/my-bookings", icon: CalendarDays },
+  ];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger>
+        <Button
+          variant="ghost"
+          className="flex h-auto items-center gap-2 rounded-full px-2 py-1.5"
+          aria-label="Open profile menu"
+        >
+          <Avatar className="size-9 border border-border">
+            <AvatarImage src={user.image || undefined} alt={displayName} />
+            <AvatarFallback className="bg-accent/10 text-accent">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+
+          <span className="hidden max-w-28 truncate text-sm font-semibold xl:block">
+            {displayName}
+          </span>
+
+          <ChevronDown className="hidden size-4 xl:block" />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="end" sideOffset={10} className="w-64">
+        <DropdownMenuLabel>
+          <p className="font-semibold">{displayName}</p>
+          <p className="truncate text-xs font-normal text-muted-foreground">
+            {user.email}
+          </p>
+        </DropdownMenuLabel>
+
+        <DropdownMenuSeparator />
+
+        {dashboardLinks.map(({ label, href, icon: Icon }) => (
+          <DropdownMenuItem
+            key={href}
+            className={
+              pathname === href || pathname.startsWith(`${href}/`)
+                ? "bg-accent/10 text-accent"
+                : ""
+            }
+          >
+            <Link href={href}>
+              <Icon className="mr-2 size-4" />
+              {label}
+            </Link>
+          </DropdownMenuItem>
+        ))}
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          disabled={loggingOut}
+          onSelect={(event) => {
+            event.preventDefault();
+            onLogout();
+          }}
+          className="cursor-pointer text-destructive"
+        >
+          {loggingOut ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <LogOut className="mr-2 size-4" />
+          )}
+          {loggingOut ? "Logging out..." : "Logout"}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const { data: session, isPending } = useSession();
+
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const user = session?.user;
+  const isAuthenticated = Boolean(user);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
-    if (href === "/studios") return pathname.startsWith("/studios");
+    if (href === "/studios") {
+      return pathname === "/studios" || pathname.startsWith("/studios/");
+    }
+
     return false;
   };
+
+  const isDashboardActive = (href: string) => {
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
+  async function handleLogout() {
+    if (loggingOut) return;
+
+    setLoggingOut(true);
+
+    try {
+      await signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            toast.success("Logged out successfully.");
+            setMobileOpen(false);
+            router.replace("/login");
+            router.refresh();
+          },
+        },
+      });
+    } catch {
+      toast.error("Unable to log out. Please try again.");
+    } finally {
+      setLoggingOut(false);
+    }
+  }
+
+  const displayName = user?.name?.trim() || "User";
+  const initials =
+    displayName
+      .split(/\s+/)
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "U";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/90 text-foreground shadow-sm backdrop-blur-xl transition-colors duration-300">
@@ -39,8 +232,7 @@ export default function Navbar() {
           </span>
 
           <span className="font-heading text-lg font-extrabold tracking-tight text-foreground sm:text-xl">
-            Studio
-            <span className="text-accent">Space</span>
+            Studio<span className="text-accent">Space</span>
           </span>
         </Link>
 
@@ -73,21 +265,41 @@ export default function Navbar() {
         <div className="hidden shrink-0 items-center gap-2 md:flex lg:gap-3">
           <ThemeToggle />
 
-          <Button
-            variant="ghost"
-            className="text-foreground hover:bg-surface hover:text-accent"
-          >
-            <Link href="/login">Log In</Link>
-          </Button>
+          {isPending ? (
+            <div className="size-9 animate-pulse rounded-full bg-surface" />
+          ) : user ? (
+            <ProfileMenu
+              user={user}
+              loggingOut={loggingOut}
+              onLogout={() => void handleLogout()}
+            />
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                className="text-foreground hover:bg-surface hover:text-accent"
+              >
+                <Link href="/login">Log In</Link>
+              </Button>
 
-          <Button className="bg-accent font-semibold text-white transition-colors hover:bg-[#E85F00]">
-            <Link href="/register">Get Started</Link>
-          </Button>
+              <Button className="bg-accent font-semibold text-white transition-colors hover:bg-[#E85F00]">
+                <Link href="/signup">Register</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Mobile actions */}
         <div className="flex shrink-0 items-center gap-2 md:hidden">
           <ThemeToggle />
+
+          {!isPending && user && (
+            <ProfileMenu
+              user={user}
+              loggingOut={loggingOut}
+              onLogout={() => void handleLogout()}
+            />
+          )}
 
           <Button
             type="button"
@@ -136,22 +348,58 @@ export default function Navbar() {
               })}
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4">
-              <Button
-                variant="outline"
-                className="w-full border-border bg-surface text-foreground hover:bg-border"
-              >
-                <Link href="/login" onClick={() => setMobileOpen(false)}>
-                  Log In
-                </Link>
-              </Button>
+            {!isPending && (
+              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4">
+                {isAuthenticated ? (
+                  <>
+                    {dashboardLinks.map(({ label, href }) => (
+                      <Button
+                        key={href}
+                        variant="outline"
+                        className={`justify-start border-border bg-surface ${
+                          isDashboardActive(href) ? "text-accent" : ""
+                        }`}
+                      >
+                        <Link href={href} onClick={() => setMobileOpen(false)}>
+                          {label}
+                        </Link>
+                      </Button>
+                    ))}
 
-              <Button className="w-full bg-accent font-semibold text-white hover:bg-[#E85F00]">
-                <Link href="/register" onClick={() => setMobileOpen(false)}>
-                  Get Started
-                </Link>
-              </Button>
-            </div>
+                    <Button
+                      variant="destructive"
+                      className="col-span-2 w-full"
+                      disabled={loggingOut}
+                      onClick={() => void handleLogout()}
+                    >
+                      {loggingOut ? (
+                        <Loader2 className="mr-2 size-4 animate-spin" />
+                      ) : (
+                        <LogOut className="mr-2 size-4" />
+                      )}
+                      {loggingOut ? "Logging out..." : "Logout"}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full border-border bg-surface text-foreground"
+                    >
+                      <Link href="/login" onClick={() => setMobileOpen(false)}>
+                        Log In
+                      </Link>
+                    </Button>
+
+                    <Button className="w-full bg-accent font-semibold text-white hover:bg-[#E85F00]">
+                      <Link href="/signup" onClick={() => setMobileOpen(false)}>
+                        Get Started
+                      </Link>
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

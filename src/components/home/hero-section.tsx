@@ -76,7 +76,7 @@ export default function HeroSection() {
               </Link>
             </div>
 
-            {/* <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3">
+            <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3">
               {highlights.map((item) => (
                 <div
                   key={item}
@@ -86,7 +86,7 @@ export default function HeroSection() {
                   {item}
                 </div>
               ))}
-            </div> */}
+            </div>
           </div>
 
           <a
