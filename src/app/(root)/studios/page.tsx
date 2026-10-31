@@ -1,0 +1,480 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import {
+  Search,
+  MapPin,
+  Users,
+  Clock,
+  ShieldCheck,
+  Eye,
+  X,
+  Loader2,
+  Building2,
+  SlidersHorizontal,
+  Wifi,
+  UserRound,
+  Mail,
+  Image as ImageIcon,
+} from "lucide-react";
+import { toast } from "sonner";
+
+type Studio = {
+  _id: string;
+  title: string;
+  category: string;
+  hourlyRate: number;
+  securityDeposit: number;
+  maxCapacity: number;
+  location: string;
+  imageUrl?: string;
+  amenities?: string[];
+  overview: string;
+  userName?: string;
+  userEmail?: string;
+  userImage?: string;
+};
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export default function ExploreStudiosPage() {
+  const [studios, setStudios] = useState<Studio[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sortBy, setSortBy] = useState("default");
+  const [selectedStudio, setSelectedStudio] = useState<Studio | null>(null);
+
+  useEffect(() => {
+    const fetchStudios = async () => {
+      try {
+        if (!API_URL) {
+          throw new Error("NEXT_PUBLIC_API_URL is not configured.");
+        }
+
+        const response = await fetch(`${API_URL}/studios`, {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch studios.");
+        }
+
+        const data = await response.json();
+
+        const studioList: Studio[] = Array.isArray(data)
+          ? data
+          : Array.isArray(data.studios)
+            ? data.studios
+            : [];
+
+        setStudios(studioList);
+      } catch (error) {
+        console.error("Fetch studios error:", error);
+        toast.error("Could not load studios. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudios();
+  }, []);
+
+  const categories = useMemo(
+    () => ["All", ...new Set(studios.map((studio) => studio.category))],
+    [studios],
+  );
+
+  const filteredStudios = useMemo(() => {
+    const query = search.toLowerCase().trim();
+
+    const result = studios.filter((studio) => {
+      const matchesSearch =
+        studio.title?.toLowerCase().includes(query) ||
+        studio.location?.toLowerCase().includes(query) ||
+        studio.category?.toLowerCase().includes(query) ||
+        studio.overview?.toLowerCase().includes(query);
+
+      const matchesCategory =
+        selectedCategory === "All" || studio.category === selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    });
+
+    if (sortBy === "low") {
+      result.sort((a, b) => a.hourlyRate - b.hourlyRate);
+    } else if (sortBy === "high") {
+      result.sort((a, b) => b.hourlyRate - a.hourlyRate);
+    }
+
+    return result;
+  }, [studios, search, selectedCategory, sortBy]);
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("en-US", {
+      maximumFractionDigits: 2,
+    }).format(Number(price) || 0);
+
+  return (
+    <main className="min-h-screen bg-[#0d0e12] px-4 py-8 text-white sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        {/* Header */}
+        <section className="mb-8">
+          <div className="mb-3 flex items-center gap-2 text-sm font-medium text-orange-400">
+            <Building2 size={17} />
+            <span>STUDIOS DIRECTORY</span>
+          </div>
+
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                Explore Studios
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-400 sm:text-base">
+                Discover creative spaces for photography, film production,
+                podcasts, music, and more.
+              </p>
+            </div>
+
+            <div className="w-fit rounded-xl border border-[#2a2d37] bg-[#16181e] px-4 py-3">
+              <p className="text-xs text-gray-400">Available studios</p>
+              <p className="mt-1 text-2xl font-bold text-orange-400">
+                {studios.length}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Search and Filters */}
+        <section className="mb-8 rounded-2xl border border-[#2a2d37] bg-[#16181e] p-4 sm:p-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_220px_220px]">
+            <div className="relative">
+              <Search
+                size={19}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
+              />
+              <input
+                type="text"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search by studio, category, or location..."
+                className="w-full rounded-xl border border-[#2a2d37] bg-[#0d0e12] py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-orange-500"
+              />
+            </div>
+
+            <div className="relative">
+              <SlidersHorizontal
+                size={17}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              />
+              <select
+                value={selectedCategory}
+                onChange={(event) => setSelectedCategory(event.target.value)}
+                className="w-full appearance-none rounded-xl border border-[#2a2d37] bg-[#0d0e12] px-10 py-3 text-sm text-white outline-none focus:border-orange-500"
+              >
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category === "All" ? "All Categories" : category}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value)}
+              className="w-full rounded-xl border border-[#2a2d37] bg-[#0d0e12] px-4 py-3 text-sm text-white outline-none focus:border-orange-500"
+            >
+              <option value="default">Sort: Default</option>
+              <option value="low">Price: Low to High</option>
+              <option value="high">Price: High to Low</option>
+            </select>
+          </div>
+        </section>
+
+        {/* Loading */}
+        {loading && (
+          <div className="flex min-h-64 items-center justify-center">
+            <div className="flex items-center gap-3 text-gray-400">
+              <Loader2 className="animate-spin text-orange-500" size={24} />
+              <span>Loading studios...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && filteredStudios.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-[#343743] bg-[#16181e] px-5 py-16 text-center">
+            <Building2 className="mx-auto mb-4 text-gray-500" size={42} />
+            <h2 className="text-xl font-semibold">No studios found</h2>
+            <p className="mt-2 text-sm text-gray-400">
+              Try another search term or select a different category.
+            </p>
+
+            <button
+              onClick={() => {
+                setSearch("");
+                setSelectedCategory("All");
+                setSortBy("default");
+              }}
+              className="mt-5 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600"
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
+
+        {/* Studio Cards */}
+        {!loading && filteredStudios.length > 0 && (
+          <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredStudios.map((studio) => (
+              <article
+                key={studio._id}
+                className="group overflow-hidden rounded-2xl border border-[#2a2d37] bg-[#16181e] transition duration-300 hover:-translate-y-1 hover:border-orange-500/50"
+              >
+                {/* Image */}
+                <div className="relative h-56 overflow-hidden bg-[#20222a]">
+                  {studio.imageUrl ? (
+                    <img
+                      src={studio.imageUrl}
+                      alt={studio.title}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-gray-500">
+                      <ImageIcon size={44} />
+                    </div>
+                  )}
+
+                  <span className="absolute left-4 top-4 rounded-lg border border-white/10 bg-black/70 px-3 py-1.5 text-xs font-medium text-orange-300 backdrop-blur">
+                    {studio.category}
+                  </span>
+
+                  <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/70 to-transparent" />
+
+                  <div className="absolute bottom-4 left-4">
+                    <p className="text-sm text-gray-200">Starting from</p>
+                    <p className="text-xl font-bold text-white">
+                      ${formatPrice(studio.hourlyRate)}
+                      <span className="text-sm font-normal text-gray-300">
+                        {" "}
+                        / hour
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Card Content */}
+                <div className="p-5">
+                  <h2 className="line-clamp-1 text-xl font-bold">
+                    {studio.title}
+                  </h2>
+
+                  <div className="mt-3 flex items-center gap-2 text-sm text-gray-400">
+                    <MapPin size={16} className="shrink-0 text-orange-400" />
+                    <span className="line-clamp-1">{studio.location}</span>
+                  </div>
+
+                  {/* Amenities Preview */}
+
+                  <button
+                    onClick={() => setSelectedStudio(studio)}
+                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                  >
+                    <Eye size={17} />
+                    View Details
+                  </button>
+                </div>
+              </article>
+            ))}
+          </section>
+        )}
+      </div>
+
+      {/* Studio Details Modal */}
+      {selectedStudio && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm"
+          onClick={() => setSelectedStudio(null)}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="studio-modal-title"
+            className="my-auto max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-[#343743] bg-[#16181e] shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#2a2d37] bg-[#16181e] px-5 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-orange-400">
+                  Studio Details
+                </p>
+                <h2
+                  id="studio-modal-title"
+                  className="mt-1 text-lg font-bold sm:text-xl"
+                >
+                  {selectedStudio.title}
+                </h2>
+              </div>
+
+              <button
+                onClick={() => setSelectedStudio(null)}
+                aria-label="Close studio details"
+                className="rounded-lg border border-[#343743] p-2 text-gray-400 transition hover:bg-[#252832] hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-6">
+              {/* Full Image */}
+              <div className="mb-6 h-56 overflow-hidden rounded-xl bg-[#20222a] sm:h-80">
+                {selectedStudio.imageUrl ? (
+                  <img
+                    src={selectedStudio.imageUrl}
+                    alt={selectedStudio.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-gray-500">
+                    <ImageIcon size={48} />
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <span className="rounded-lg bg-orange-500/10 px-3 py-2 text-sm font-medium text-orange-400">
+                  {selectedStudio.category}
+                </span>
+
+                <p className="text-2xl font-bold">
+                  ${formatPrice(selectedStudio.hourlyRate)}
+                  <span className="text-sm font-normal text-gray-400">
+                    {" "}
+                    / hour
+                  </span>
+                </p>
+              </div>
+
+              {/* Main Information */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="rounded-xl border border-[#2a2d37] bg-[#0d0e12] p-4">
+                  <p className="mb-2 flex items-center gap-2 text-sm text-gray-400">
+                    <MapPin size={16} className="text-orange-400" />
+                    Location / Address
+                  </p>
+                  <p className="break-words font-medium">
+                    {selectedStudio.location || "Not provided"}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-[#2a2d37] bg-[#0d0e12] p-4">
+                  <p className="mb-2 flex items-center gap-2 text-sm text-gray-400">
+                    <Users size={16} className="text-orange-400" />
+                    Maximum Capacity
+                  </p>
+                  <p className="font-medium">
+                    {selectedStudio.maxCapacity} people
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-[#2a2d37] bg-[#0d0e12] p-4">
+                  <p className="mb-2 flex items-center gap-2 text-sm text-gray-400">
+                    <ShieldCheck size={16} className="text-orange-400" />
+                    Security Deposit
+                  </p>
+                  <p className="font-medium">
+                    ${formatPrice(selectedStudio.securityDeposit)}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-[#2a2d37] bg-[#0d0e12] p-4">
+                  <p className="mb-2 flex items-center gap-2 text-sm text-gray-400">
+                    <Clock size={16} className="text-orange-400" />
+                    Hourly Rate
+                  </p>
+                  <p className="font-medium">
+                    ${formatPrice(selectedStudio.hourlyRate)} / hour
+                  </p>
+                </div>
+              </div>
+
+              {/* Overview */}
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold">Detailed Overview</h3>
+                <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-gray-400">
+                  {selectedStudio.overview || "No overview provided."}
+                </p>
+              </div>
+
+              {/* All Amenities */}
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold">
+                  Amenities & Facilities
+                </h3>
+
+                {selectedStudio.amenities?.length ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {selectedStudio.amenities.map((amenity) => (
+                      <span
+                        key={amenity}
+                        className="rounded-lg border border-[#343743] bg-[#0d0e12] px-3 py-2 text-sm text-gray-300"
+                      >
+                        {amenity}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-gray-500">
+                    No amenities listed.
+                  </p>
+                )}
+              </div>
+
+              {/* Owner Information */}
+              <div className="mt-6 rounded-xl border border-[#2a2d37] bg-[#0d0e12] p-4">
+                <h3 className="mb-4 font-semibold">Studio Owner</h3>
+
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <UserRound
+                      size={18}
+                      className="mt-0.5 shrink-0 text-orange-400"
+                    />
+                    <div>
+                      <p className="text-xs text-gray-500">Owner Name</p>
+                      <p className="mt-1 break-words text-sm text-gray-200">
+                        {selectedStudio.userName || "Not provided"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Mail
+                      size={18}
+                      className="mt-0.5 shrink-0 text-orange-400"
+                    />
+                    <div>
+                      <p className="text-xs text-gray-500">Owner Email</p>
+                      <p className="mt-1 break-all text-sm text-gray-200">
+                        {selectedStudio.userEmail || "Not provided"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSelectedStudio(null)}
+                className="mt-6 w-full rounded-xl border border-[#343743] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#252832]"
+              >
+                Close Details
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+    </main>
+  );
+}

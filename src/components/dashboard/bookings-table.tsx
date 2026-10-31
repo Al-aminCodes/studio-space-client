@@ -5,7 +5,7 @@ import type { Booking } from "./types";
 
 type Props = {
   bookings: Booking[];
-  onStatusChange: (id: number, status: Booking["status"]) => void;
+  onStatusChange: (id: string, status: Booking["status"]) => void;
 };
 
 export default function BookingsTable({ bookings, onStatusChange }: Props) {
@@ -64,7 +64,7 @@ export default function BookingsTable({ bookings, onStatusChange }: Props) {
                       value={booking.status}
                       onChange={(event) =>
                         onStatusChange(
-                          booking.id,
+                          String(booking.id),
                           event.target.value as Booking["status"],
                         )
                       }

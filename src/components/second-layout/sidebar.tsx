@@ -11,29 +11,42 @@ import {
   Home,
   X,
 } from "lucide-react";
+import { usePathname } from "next/navigation";
 
-import type {
-  DashboardSection,
-  DashboardUser,
-} from "@/components/dashboard/types.ts";
+import type { DashboardUser } from "@/components/dashboard/types";
 
 type SidebarProps = {
   user: DashboardUser;
-  activePage: DashboardSection;
-  onNavigate: (page: DashboardSection) => void;
   mobileOpen: boolean;
   onClose: () => void;
 };
 
-const links: {
-  label: DashboardSection;
-  icon: typeof LayoutDashboard;
-}[] = [
-  { label: "Overview", icon: LayoutDashboard },
-  { label: "Add New Studio", icon: Plus },
-  { label: "My Studio Listings", icon: Building2 },
-  { label: "My Bookings", icon: CalendarDays },
-  { label: "Profile", icon: UserRound },
+const links = [
+  {
+    label: "Overview",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Add New Studio",
+    href: "/dashboard/add-studio",
+    icon: Plus,
+  },
+  {
+    label: "My Studio Listings",
+    href: "/dashboard/my-studios",
+    icon: Building2,
+  },
+  {
+    label: "My Bookings",
+    href: "/dashboard/my-bookings",
+    icon: CalendarDays,
+  },
+  {
+    label: "Profile",
+    href: "/dashboard/profile",
+    icon: UserRound,
+  },
 ];
 
 function getInitials(name?: string | null) {
@@ -47,13 +60,9 @@ function getInitials(name?: string | null) {
   );
 }
 
-export default function Sidebar({
-  user,
-  activePage,
-  onNavigate,
-  mobileOpen,
-  onClose,
-}: SidebarProps) {
+export default function Sidebar({ user, mobileOpen, onClose }: SidebarProps) {
+  const pathname = usePathname();
+
   return (
     <>
       {mobileOpen && (
@@ -70,6 +79,7 @@ export default function Sidebar({
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
       >
+        {/* Logo */}
         <div className="flex h-20 items-center justify-between border-b border-border px-5">
           <Link
             href="/"
@@ -95,21 +105,25 @@ export default function Sidebar({
           </button>
         </div>
 
+        {/* Navigation heading */}
         <div className="px-6 pb-3 pt-7">
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             Workspace
           </p>
         </div>
 
+        {/* Route links */}
         <nav className="flex-1 space-y-1 px-3">
-          {links.map(({ label, icon: Icon }) => {
-            const active = activePage === label;
+          {links.map(({ label, href, icon: Icon }) => {
+            const active =
+              pathname === href ||
+              (href !== "/dashboard" && pathname.startsWith(`${href}/`));
 
             return (
-              <button
-                key={label}
-                type="button"
-                onClick={() => onNavigate(label)}
+              <Link
+                key={href}
+                href={href}
+                onClick={onClose}
                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition ${
                   active
                     ? "bg-accent text-white shadow-sm"
@@ -118,18 +132,23 @@ export default function Sidebar({
               >
                 <Icon className="size-4 shrink-0" />
                 {label}
-              </button>
+              </Link>
             );
           })}
         </nav>
 
+        {/* User profile */}
         <div className="border-t border-border p-4">
-          <button
-            type="button"
-            onClick={() => onNavigate("Profile")}
-            className="flex w-full items-center gap-3 rounded-xl bg-muted/60 p-3 text-left"
+          <Link
+            href="/dashboard/profile"
+            onClick={onClose}
+            className={`flex w-full items-center gap-3 rounded-xl p-3 text-left transition ${
+              pathname === "/dashboard/profile"
+                ? "bg-accent/10"
+                : "bg-muted/60 hover:bg-muted"
+            }`}
           >
-            {user.image ? (
+            {user?.image ? (
               <img
                 src={user.image}
                 alt={user.name || "Profile"}
@@ -137,20 +156,22 @@ export default function Sidebar({
               />
             ) : (
               <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bold text-accent">
-                {getInitials(user.name)}
+                {getInitials(user?.name)}
               </span>
             )}
 
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-semibold">
-                {user.name || "StudioSpace Member"}
+                {user?.name || "StudioSpace Member"}
               </span>
+
               <span className="block truncate text-xs text-muted-foreground">
-                {user.email}
+                {user?.email}
               </span>
             </span>
-          </button>
+          </Link>
 
+          {/* Back to website */}
           <Link
             href="/"
             onClick={onClose}

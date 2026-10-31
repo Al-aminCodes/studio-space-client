@@ -31,10 +31,14 @@ const links = [
 ];
 
 const dashboardLinks = [
-  { label: "Dashboard", href: "/deshboard", icon: LayoutDashboard },
-  { label: "Add New Studio", href: "/add-studio", icon: PlusCircle },
-  { label: "My Studio Listings", href: "/my-studios", icon: Building2 },
-  { label: "My Bookings", href: "/my-bookings", icon: CalendarDays },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Add New Studio", href: "/dashboard/add-studio", icon: PlusCircle },
+  {
+    label: "My Studio Listings",
+    href: "/dashboard/my-studios",
+    icon: Building2,
+  },
+  { label: "My Bookings", href: "/dashboard/my-bookings", icon: CalendarDays },
 ];
 
 type User = {
@@ -111,7 +115,7 @@ function ProfileMenu({ user, loggingOut, onLogout }: ProfileMenuProps) {
             <div className="my-3 border-t border-gray-200" />
 
             <Link
-              href="/profile"
+              href="/dashboard/profile"
               onClick={() => setMenuOpen(false)}
               className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition hover:bg-gray-100 hover:text-orange-600 ${
                 pathname === "/profile"

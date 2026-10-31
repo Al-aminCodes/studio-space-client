@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { Building2, MapPin, Plus, Search, Star } from "lucide-react";
+import { useState } from "react";
 import type { Studio } from "./types";
 
 type Props = {
   studios: Studio[];
   onAdd: () => void;
   onEdit: (studio: Studio) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 };
 
 export default function StudioListings({
@@ -106,7 +106,7 @@ export default function StudioListings({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onDelete(studio.id)}
+                  onClick={() => onDelete(String(studio.id))}
                   className="h-10 rounded-lg border border-border text-sm font-semibold text-red-500 hover:bg-red-500/10"
                 >
                   Delete
