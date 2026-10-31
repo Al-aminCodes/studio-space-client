@@ -18,6 +18,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 type Studio = {
   _id: string;
@@ -277,13 +278,13 @@ export default function ExploreStudiosPage() {
 
                   {/* Amenities Preview */}
 
-                  <button
-                    onClick={() => setSelectedStudio(studio)}
+                  <Link
+                    href={`/studios/${studio._id}`}
                     className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
                   >
                     <Eye size={17} />
                     View Details
-                  </button>
+                  </Link>
                 </div>
               </article>
             ))}
