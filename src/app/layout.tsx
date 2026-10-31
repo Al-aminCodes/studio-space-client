@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
-import ThemeProvider from "@/components/providers/theme-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
@@ -28,9 +26,8 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <Navbar />
           {children}
-          <Footer />
+
           <Toaster position="top-right" richColors />
         </ThemeProvider>
       </body>
