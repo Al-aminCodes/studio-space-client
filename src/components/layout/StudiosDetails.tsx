@@ -1,23 +1,23 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
-import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   FiArrowLeft,
-  FiMapPin,
-  FiUsers,
-  FiShield,
+  FiCheckCircle,
+  FiClock,
   FiHeart,
   FiMail,
-  FiClock,
-  FiCheckCircle,
+  FiMapPin,
+  FiShield,
+  FiUsers,
 } from "react-icons/fi";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
@@ -42,6 +42,55 @@ type StudioDetailsProps = {
 };
 
 export default function StudioDetails({ studio }: StudioDetailsProps) {
+  const [alreadyBooked, setAlreadyBooked] = useState(false);
+  const [checkingBooking, setCheckingBooking] = useState(true);
+  const { data: session, isPending: sessionLoading } = useSession();
+
+  useEffect(() => {
+    const checkBooking = async () => {
+      const user = session?.user;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+      if (sessionLoading) return;
+
+      if (!user?.email || !studio?._id || !apiUrl) {
+        setAlreadyBooked(false);
+        setCheckingBooking(false);
+        return;
+      }
+
+      try {
+        setCheckingBooking(true);
+
+        const response = await fetch(
+          `${apiUrl}/my-bookings/${encodeURIComponent(user.email)}`,
+          { cache: "no-store" },
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch bookings");
+        }
+
+        const data = await response.json();
+
+        const bookings = Array.isArray(data) ? data : (data.bookings ?? []);
+
+        const exists = bookings.some(
+          (booking: { studioId?: string; status?: string }) =>
+            String(booking.studioId) === String(studio._id) &&
+            ["Pending", "Confirmed"].includes(booking.status ?? ""),
+        );
+
+        setAlreadyBooked(exists);
+      } catch (error) {
+        console.error("Booking check error:", error);
+      } finally {
+        setCheckingBooking(false);
+      }
+    };
+
+    checkBooking();
+  }, [session?.user, sessionLoading, studio?._id]);
   const {
     _id,
     title,
@@ -70,7 +119,6 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
     maximumFractionDigits: 0,
   }).format(securityDeposit);
 
-  const { data: session, isPending: sessionLoading } = useSession();
   const router = useRouter();
 
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -80,7 +128,7 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
 
     const user = session?.user;
 
-    if (!user) {
+    if (!user?.email) {
       toast.error("Please log in to book this studio.");
       router.push("/login");
       return;
@@ -93,11 +141,47 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
       return;
     }
 
+    if (!studio?._id) {
+      toast.error("Studio information is missing.");
+      return;
+    }
+
     setBookingLoading(true);
 
     try {
+      const email = user.email.trim().toLowerCase();
+      const studioId = String(studio._id);
+
+      // Step 1: Check existing bookings
+      const checkResponse = await fetch(
+        `${apiUrl}/my-bookings/${encodeURIComponent(email)}`,
+        { cache: "no-store" },
+      );
+
+      if (!checkResponse.ok) {
+        throw new Error("Could not verify existing bookings.");
+      }
+
+      const existingData = await checkResponse.json();
+
+      const existingBookings = Array.isArray(existingData)
+        ? existingData
+        : (existingData.bookings ?? []);
+
+      const alreadyBooked = existingBookings.some(
+        (booking: { studioId?: string; status?: string }) =>
+          String(booking.studioId) === studioId &&
+          ["Pending", "Confirmed"].includes(booking.status ?? ""),
+      );
+
+      if (alreadyBooked) {
+        toast.info("You have already booked this studio.");
+        return;
+      }
+
+      // Step 2: Create booking
       const bookingData = {
-        studioId: studio._id,
+        studioId,
         studioTitle: studio.title,
         category: studio.category,
         hourlyRate: studio.hourlyRate,
@@ -107,11 +191,9 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
         imageUrl: studio.imageUrl ?? "",
         amenities: studio.amenities ?? [],
         overview: studio.overview,
-
         userName: user.name ?? "",
-        userEmail: user.email ?? "",
+        userEmail: email,
         userImage: user.image ?? "",
-
         status: "Pending",
         bookingDate: new Date().toISOString(),
       };
@@ -125,21 +207,25 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
       });
 
       const result = await response.json().catch(() => null);
-      console.log(result);
+
+      if (response.status === 409) {
+        toast.info(result?.message || "You have already booked this studio.");
+        return;
+      }
+
       if (!response.ok) {
-        throw new Error(result?.message || "Failed to book this studio.");
+        throw new Error(result?.message || "Booking failed.");
       }
 
       toast.success("Studio booked successfully!");
+
       router.push("/dashboard/my-bookings");
       router.refresh();
     } catch (error) {
       console.error("Booking error:", error);
 
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while booking.",
+        error instanceof Error ? error.message : "Something went wrong.",
       );
     } finally {
       setBookingLoading(false);
@@ -282,14 +368,25 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
                 <div className="flex gap-3">
                   <Button
                     onClick={handleBooking}
-                    disabled={bookingLoading || sessionLoading}
-                    className="h-12 flex-1 border-0 bg-indigo-600 font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-indigo-500 dark:text-white dark:hover:bg-indigo-600"
+                    disabled={
+                      sessionLoading ||
+                      checkingBooking ||
+                      bookingLoading ||
+                      alreadyBooked
+                    }
+                    className={`w-full transition-colors ${
+                      alreadyBooked
+                        ? "bg-green-600 hover:bg-green-600 text-white cursor-not-allowed"
+                        : "h-12 flex-1 border-0 bg-indigo-600 font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-indigo-500 dark:text-white dark:hover:bg-indigo-600"
+                    }`}
                   >
-                    {bookingLoading
-                      ? "Booking..."
-                      : sessionLoading
-                        ? "Checking login..."
-                        : "Book Workspace Now"}
+                    {sessionLoading || checkingBooking
+                      ? "Checking Booking..."
+                      : bookingLoading
+                        ? "Booking..."
+                        : alreadyBooked
+                          ? "Already Booked ✓"
+                          : "Book This Studio"}
                   </Button>
 
                   <Button

@@ -42,22 +42,26 @@ export default function MyStudiosPage() {
     try {
       setLoading(true);
 
-      const response = await fetch(`${API_URL}/my-listings/${userEmail}`, {
-        cache: "no-store",
-      });
+      const response = await fetch(
+        `${API_URL}/my-listings/${encodeURIComponent(userEmail)}`,
+        {
+          cache: "no-store",
+        },
+      );
 
       if (!response.ok) {
         throw new Error("Could not load studios.");
       }
 
       const data = await response.json();
+
       const allStudios: Studio[] = Array.isArray(data)
         ? data
         : (data.studios ?? []);
 
-      setStudios(allStudios.filter((studio) => studio.userEmail === userEmail));
+      setStudios(allStudios);
     } catch (error) {
-      console.error(error);
+      console.error("Load studios error:", error);
       toast.error("Failed to load your studios.");
     } finally {
       setLoading(false);
