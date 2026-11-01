@@ -1,5 +1,8 @@
 "use client";
-
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "@/lib/auth-client";
+import { toast } from "sonner";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -31,14 +34,14 @@ type Studio = {
   overview: string;
   userName?: string;
   userEmail?: string;
+  userImage?: string;
 };
 
 type StudioDetailsProps = {
   studio: Studio;
-  onBook?: (studioId: string) => void;
 };
 
-export default function StudioDetails({ studio, onBook }: StudioDetailsProps) {
+export default function StudioDetails({ studio }: StudioDetailsProps) {
   const {
     _id,
     title,
@@ -52,6 +55,7 @@ export default function StudioDetails({ studio, onBook }: StudioDetailsProps) {
     overview,
     userName,
     userEmail,
+    userImage,
   } = studio;
 
   const formattedRate = new Intl.NumberFormat("en-US", {
@@ -65,6 +69,82 @@ export default function StudioDetails({ studio, onBook }: StudioDetailsProps) {
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(securityDeposit);
+
+  const { data: session, isPending: sessionLoading } = useSession();
+  const router = useRouter();
+
+  const [bookingLoading, setBookingLoading] = useState(false);
+
+  const handleBooking = async () => {
+    if (sessionLoading || bookingLoading) return;
+
+    const user = session?.user;
+
+    if (!user) {
+      toast.error("Please log in to book this studio.");
+      router.push("/login");
+      return;
+    }
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+    if (!apiUrl) {
+      toast.error("Server URL is not configured.");
+      return;
+    }
+
+    setBookingLoading(true);
+
+    try {
+      const bookingData = {
+        studioId: studio._id,
+        studioTitle: studio.title,
+        category: studio.category,
+        hourlyRate: studio.hourlyRate,
+        securityDeposit: studio.securityDeposit,
+        maxCapacity: studio.maxCapacity,
+        location: studio.location,
+        imageUrl: studio.imageUrl ?? "",
+        amenities: studio.amenities ?? [],
+        overview: studio.overview,
+
+        userName: user.name ?? "",
+        userEmail: user.email ?? "",
+        userImage: user.image ?? "",
+
+        status: "Pending",
+        bookingDate: new Date().toISOString(),
+      };
+
+      const response = await fetch(`${apiUrl}/bookings-studios`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bookingData),
+      });
+
+      const result = await response.json().catch(() => null);
+      console.log(result);
+      if (!response.ok) {
+        throw new Error(result?.message || "Failed to book this studio.");
+      }
+
+      toast.success("Studio booked successfully!");
+      router.push("/dashboard/my-bookings");
+      router.refresh();
+    } catch (error) {
+      console.error("Booking error:", error);
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while booking.",
+      );
+    } finally {
+      setBookingLoading(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-background text-foreground transition-colors duration-300">
@@ -201,10 +281,15 @@ export default function StudioDetails({ studio, onBook }: StudioDetailsProps) {
                 {/* Booking Actions */}
                 <div className="flex gap-3">
                   <Button
-                    onClick={() => onBook?.(_id)}
-                    className="h-12 flex-1 border-0 bg-indigo-600 font-semibold text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:text-white dark:hover:bg-indigo-600"
+                    onClick={handleBooking}
+                    disabled={bookingLoading || sessionLoading}
+                    className="h-12 flex-1 border-0 bg-indigo-600 font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-indigo-500 dark:text-white dark:hover:bg-indigo-600"
                   >
-                    Book Workspace Now
+                    {bookingLoading
+                      ? "Booking..."
+                      : sessionLoading
+                        ? "Checking login..."
+                        : "Book Workspace Now"}
                   </Button>
 
                   <Button
@@ -228,7 +313,15 @@ export default function StudioDetails({ studio, onBook }: StudioDetailsProps) {
 
                 <div className="flex items-center gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
-                    {userName?.charAt(0).toUpperCase() || "H"}
+                    {userImage ? (
+                      <img
+                        src={userImage}
+                        alt={userName}
+                        className="rounded-full"
+                      />
+                    ) : (
+                      "H"
+                    )}
                   </div>
 
                   <div className="min-w-0">

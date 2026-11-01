@@ -19,7 +19,6 @@ export default async function StudioDetailsPage({ params }: Props) {
   }
 
   const studio = await response.json();
-  console.log(studio);
 
   return <StudioDetails studio={studio} />;
 }
