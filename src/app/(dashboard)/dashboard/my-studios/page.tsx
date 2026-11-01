@@ -147,9 +147,6 @@ export default function MyStudiosPage() {
     <main className="min-h-screen bg-background p-4 text-foreground sm:p-6 lg:p-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-7">
-          <p className="text-sm text-muted-foreground">
-            Dashboard / My Studio Listings
-          </p>
           <h1 className="mt-2 text-2xl font-bold sm:text-3xl">
             My Studio Listings
           </h1>

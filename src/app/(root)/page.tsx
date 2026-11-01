@@ -4,6 +4,8 @@ import HeroSection from "@/components/home/hero-section";
 import HowItWorks from "@/components/home/how-it-works";
 import HostGuarantee from "@/components/home/host-guarantee";
 import HomeCTA from "@/components/home/home-cta";
+import FeaturedStudios from "@/components/home/FeaturedStudios";
+import BrowseCategories from "@/components/home/BrowseCategories";
 
 export default function HomePage() {
   return (
@@ -11,6 +13,9 @@ export default function HomePage() {
       <HeroSection />
       {/* <CategorySection />
       <FeaturedStudios /> */}
+      <FeaturedStudios />
+
+      <BrowseCategories />
       <HowItWorks />
       <HostGuarantee />
       <HomeCTA />

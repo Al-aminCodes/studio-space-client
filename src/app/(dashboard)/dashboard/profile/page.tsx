@@ -1,8 +1,8 @@
 "use client";
-
+import { authClient, signOut, useSession } from "@/lib/auth-client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signOut, useSession } from "@/lib/auth-client";
+
 import { toast } from "sonner";
 import {
   UserRound,
@@ -28,11 +28,6 @@ export default function ProfilePage() {
   const handleSave = async () => {
     const trimmedName = editName.trim();
 
-    if (!trimmedName) {
-      toast.error("Name cannot be empty.");
-      return;
-    }
-
     if (trimmedName.length < 2) {
       toast.error("Name must contain at least 2 characters.");
       return;
@@ -41,24 +36,16 @@ export default function ProfilePage() {
     setIsSaving(true);
 
     try {
-      const response = await fetch("/api/users/profile", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: trimmedName }),
+      const { error } = await authClient.updateUser({
+        name: trimmedName,
       });
 
-      const result = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        throw new Error(result?.message || "Could not update your profile.");
+      if (error) {
+        throw new Error(error.message || "Could not update your profile.");
       }
 
-      const updatedName = result?.user?.name ?? trimmedName;
-
-      setName(updatedName);
-      setEditName(updatedName);
+      setName(trimmedName);
+      setEditName(trimmedName);
       setIsEditing(false);
 
       toast.success("Profile updated successfully.");
