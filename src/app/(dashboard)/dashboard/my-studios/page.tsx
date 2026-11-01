@@ -260,7 +260,7 @@ export default function MyStudiosPage() {
                       <td className="px-5 py-4">
                         <div className="flex justify-end gap-2">
                           <Link
-                            href={`/dashboard/my-studios/${studio._id}/edit`}
+                            href={`/dashboard/my-studios/edit/${studio._id}`}
                             className="inline-flex items-center gap-1.5 rounded-lg border border-blue-500/30 px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-500/10 dark:text-blue-400"
                           >
                             <Pencil size={14} />
