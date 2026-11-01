@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -110,6 +110,8 @@ export default function AddStudioPage() {
     const hourlyRate = Number(form.hourlyRate);
     const securityDeposit = Number(form.securityDeposit);
     const maxCapacity = Number(form.maxCapacity);
+    const { data, error } = await authClient.token();
+    const token = data?.token;
 
     if (
       !form.title.trim() ||
@@ -163,6 +165,7 @@ export default function AddStudioPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           title: form.title.trim(),

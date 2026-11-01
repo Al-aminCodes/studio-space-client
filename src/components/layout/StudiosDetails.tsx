@@ -1,5 +1,5 @@
 "use client";
-import { useSession } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -51,6 +51,9 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
   useEffect(() => {
     const checkBooking = async () => {
       const user = session?.user;
+      const { data, error } = await authClient.token();
+      const token = data?.token;
+
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
       if (sessionLoading) return;
@@ -66,7 +69,12 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
 
         const response = await fetch(
           `${apiUrl}/my-bookings/${encodeURIComponent(user.email)}`,
-          { cache: "no-store" },
+          {
+            cache: "no-store",
+            headers: {
+              authorization: `Bearer ${token}`,
+            },
+          },
         );
 
         if (!response.ok) {

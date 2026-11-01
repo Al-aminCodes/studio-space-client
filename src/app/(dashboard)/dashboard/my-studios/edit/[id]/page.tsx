@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
-import { useSession } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import { toast } from "sonner";
 
 type Studio = {
@@ -62,12 +62,19 @@ export default function EditStudioPage() {
     let cancelled = false;
 
     async function loadStudio() {
+      const { data, error } = await authClient.token();
+      const token = data?.token;
       try {
         setLoading(true);
 
         const response = await fetch(
           `${API_URL}/my-listings/${encodeURIComponent(email!)}`,
-          { cache: "no-store" },
+          {
+            cache: "no-store",
+            headers: {
+              authorization: `Bearer ${token}`,
+            },
+          },
         );
 
         if (!response.ok) {
@@ -183,7 +190,8 @@ export default function EditStudioPage() {
         .filter(Boolean),
       overview: form.overview.trim(),
     };
-
+    const { data, error } = await authClient.token();
+    const token = data?.token;
     try {
       setSaving(true);
 
@@ -193,6 +201,7 @@ export default function EditStudioPage() {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(updatedData),
         },

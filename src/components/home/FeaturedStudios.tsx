@@ -15,8 +15,6 @@ async function getFeaturedStudios(): Promise<Studio[]> {
 
     const result = await response.json();
 
-    console.log("Featured API result:", result);
-
     // Supports both response formats
     const studios = Array.isArray(result)
       ? result

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import {
   CalendarDays,
   Image as ImageIcon,
@@ -40,7 +40,8 @@ export default function MyBookingsPage() {
       setLoading(false);
       return;
     }
-
+    const { data, error } = await authClient.token();
+    const token = data?.token;
     try {
       setLoading(true);
 
@@ -48,6 +49,9 @@ export default function MyBookingsPage() {
         `${API_URL}/my-bookings/${encodeURIComponent(userEmail)}`,
         {
           cache: "no-store",
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
         },
       );
 
@@ -95,6 +99,8 @@ export default function MyBookingsPage() {
     );
 
     if (!confirmed) return;
+    const { data, error } = await authClient.token();
+    const token = data?.token;
 
     try {
       setCancellingId(booking._id);
@@ -103,6 +109,9 @@ export default function MyBookingsPage() {
         `${API_URL}/bookings-studios/${encodeURIComponent(booking._id)}`,
         {
           method: "DELETE",
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
         },
       );
 

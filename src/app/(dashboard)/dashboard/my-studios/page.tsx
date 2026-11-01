@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useSession } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import { toast } from "sonner";
 import {
   Pencil,
@@ -34,6 +34,8 @@ export default function MyStudiosPage() {
   const userEmail = session?.user?.email;
 
   const loadStudios = useCallback(async () => {
+    const { data, error } = await authClient.token();
+    const token = data?.token;
     if (!userEmail || !API_URL) {
       setLoading(false);
       return;
@@ -46,6 +48,9 @@ export default function MyStudiosPage() {
         `${API_URL}/my-listings/${encodeURIComponent(userEmail)}`,
         {
           cache: "no-store",
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
         },
       );
 
@@ -81,6 +86,8 @@ export default function MyStudiosPage() {
       toast.error("Server URL is not configured.");
       return;
     }
+    const { data, error } = await authClient.token();
+    const token = data?.token;
 
     const confirmed = window.confirm(
       "Are you sure you want to delete this studio?",
@@ -93,6 +100,9 @@ export default function MyStudiosPage() {
 
       const response = await fetch(`${API_URL}/my-listings/${id}`, {
         method: "DELETE",
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) {
