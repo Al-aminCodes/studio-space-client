@@ -174,7 +174,7 @@ export default function MyBookingsPage() {
         </p>
         <Link
           href="/login"
-          className="rounded-lg bg-primary px-5 py-2.5 text-primary-foreground"
+          className="rounded-lg bg-[#ff6a00] px-5 py-2.5 text-primary-foreground"
         >
           Log In
         </Link>
@@ -196,14 +196,22 @@ export default function MyBookingsPage() {
         </div>
 
         <section className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="border-b border-border p-4">
-            <h2 className="font-semibold text-card-foreground">
-              Booking History
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {bookings.length} reservation
-              {bookings.length === 1 ? "" : "s"}
-            </p>
+          <div className="flex flex-col justify-between gap-3 border-b border-border p-4 sm:flex-row sm:items-center">
+            <div>
+              <h2 className="font-semibold text-card-foreground">
+                Booking History
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {bookings.length} reservation
+                {bookings.length === 1 ? "" : "s"}
+              </p>
+            </div>
+            <Link
+              href="/studios"
+              className="inline-flex items-center justify-center rounded-lg bg-[#ff6a00] px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            >
+              + Book More Studio
+            </Link>
           </div>
 
           {bookings.length === 0 ? (

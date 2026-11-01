@@ -1,24 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import {
-  Search,
-  MapPin,
-  Users,
-  Clock,
-  ShieldCheck,
-  Eye,
-  X,
-  Loader2,
   Building2,
-  SlidersHorizontal,
-  Wifi,
-  UserRound,
-  Mail,
+  Clock,
+  Eye,
   Image as ImageIcon,
+  Loader2,
+  Mail,
+  MapPin,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal,
+  UserRound,
+  Users,
+  X,
 } from "lucide-react";
-import { toast } from "sonner";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { FiStar } from "react-icons/fi";
+import { toast } from "sonner";
 
 type Studio = {
   _id: string;
@@ -34,6 +34,7 @@ type Studio = {
   userName?: string;
   userEmail?: string;
   userImage?: string;
+  rating?: number;
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -274,6 +275,29 @@ export default function ExploreStudiosPage() {
                   <div className="mt-3 flex items-center gap-2 text-sm text-gray-400">
                     <MapPin size={16} className="shrink-0 text-orange-400" />
                     <span className="line-clamp-1">{studio.location}</span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FiStar
+                          key={star}
+                          size={17}
+                          className={
+                            star <= Math.round(Number(studio.rating) || 0)
+                              ? "fill-amber-400 text-amber-400"
+                              : "text-muted-foreground"
+                          }
+                        />
+                      ))}
+                    </div>
+
+                    <span className="text-sm font-semibold text-foreground">
+                      {Number(studio.rating) > 0
+                        ? Number(studio.rating).toFixed(1)
+                        : "No rating"}
+                    </span>
+
+                    <span className="text-sm text-muted-foreground">/ 5</span>
                   </div>
 
                   {/* Amenities Preview */}

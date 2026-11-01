@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import {
   MapPin,
   DollarSign,
   Users,
+  Star,
 } from "lucide-react";
 
 const categories = [
@@ -51,6 +52,7 @@ type StudioFormData = {
   imageUrl: string;
   amenities: string[];
   overview: string;
+  rating: number;
 };
 
 const initialForm: StudioFormData = {
@@ -63,6 +65,7 @@ const initialForm: StudioFormData = {
   imageUrl: "",
   amenities: [],
   overview: "",
+  rating: 0,
 };
 
 const inputClass =
@@ -76,10 +79,11 @@ export default function AddStudioPage() {
 
   const [form, setForm] = useState<StudioFormData>(initialForm);
   const [saving, setSaving] = useState(false);
+  const [hoverRating, setHoverRating] = useState(0);
 
   const userName = session?.user?.name ?? "";
   const userEmail = session?.user?.email ?? "";
-  const userImage = session?.user.image ?? "";
+  const userImage = session?.user?.image ?? "";
 
   const updateField = (field: keyof StudioFormData, value: string) => {
     setForm((previous) => ({ ...previous, [field]: value }));
@@ -94,7 +98,7 @@ export default function AddStudioPage() {
     }));
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!session?.user) {
@@ -132,6 +136,11 @@ export default function AddStudioPage() {
       return;
     }
 
+    if (!Number.isFinite(form.rating) || form.rating < 1 || form.rating > 5) {
+      toast.error("Please select a rating from 1 to 5 stars.");
+      return;
+    }
+
     if (
       form.imageUrl.trim() &&
       !/^https?:\/\/\S+$/i.test(form.imageUrl.trim())
@@ -165,6 +174,7 @@ export default function AddStudioPage() {
           imageUrl: form.imageUrl.trim(),
           amenities: form.amenities,
           overview: form.overview.trim(),
+          rating: Number(form.rating),
           userName,
           userEmail,
           userImage,
@@ -182,6 +192,8 @@ export default function AddStudioPage() {
       router.push("/dashboard/my-studios");
       router.refresh();
     } catch (error) {
+      console.error("Create studio error:", error);
+
       toast.error(
         error instanceof Error ? error.message : "Unable to save studio.",
       );
@@ -229,6 +241,7 @@ export default function AddStudioPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-7">
+          {/* Studio Information */}
           <section className="rounded-2xl border border-[#2a2d37] bg-[#16181e] p-5 sm:p-8">
             <h2 className="mb-6 text-lg font-semibold">Studio Information</h2>
 
@@ -341,6 +354,59 @@ export default function AddStudioPage() {
                 />
               </div>
 
+              {/* Rating Field */}
+              <div className="rounded-xl border border-[#343743] bg-[#101116] p-4">
+                <label className={labelClass}>
+                  <Star className="mr-1 inline h-4 w-4 text-amber-400" />
+                  Studio Rating *
+                </label>
+
+                <div
+                  className="flex items-center gap-1"
+                  onMouseLeave={() => setHoverRating(0)}
+                  role="group"
+                  aria-label="Select studio rating"
+                >
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const active = star <= (hoverRating || form.rating);
+
+                    return (
+                      <button
+                        key={star}
+                        type="button"
+                        aria-label={`Rate ${star} out of 5 stars`}
+                        aria-pressed={form.rating === star}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onFocus={() => setHoverRating(star)}
+                        onBlur={() => setHoverRating(0)}
+                        onClick={() =>
+                          setForm((previous) => ({
+                            ...previous,
+                            rating: star,
+                          }))
+                        }
+                        className="rounded-md p-1 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                      >
+                        <Star
+                          size={30}
+                          className={
+                            active
+                              ? "fill-amber-400 text-amber-400"
+                              : "text-gray-500"
+                          }
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <p className="mt-2 text-sm text-gray-400">
+                  {form.rating > 0
+                    ? `${form.rating}.0 out of 5 stars`
+                    : "Select a rating from 1 to 5"}
+                </p>
+              </div>
+
               <div>
                 <label htmlFor="imageUrl" className={labelClass}>
                   <ImageIcon className="mr-1 inline h-4 w-4 text-orange-400" />
@@ -371,6 +437,7 @@ export default function AddStudioPage() {
             </div>
           </section>
 
+          {/* Amenities */}
           <section className="rounded-2xl border border-[#2a2d37] bg-[#16181e] p-5 sm:p-8">
             <h2 className="mb-2 text-lg font-semibold">Amenities</h2>
             <p className="mb-5 text-sm text-gray-400">
@@ -419,6 +486,7 @@ export default function AddStudioPage() {
             )}
           </section>
 
+          {/* Overview */}
           <section className="rounded-2xl border border-[#2a2d37] bg-[#16181e] p-5 sm:p-8">
             <h2 className="mb-5 text-lg font-semibold">Detailed Overview</h2>
             <label htmlFor="overview" className={labelClass}>
@@ -439,6 +507,7 @@ export default function AddStudioPage() {
             </p>
           </section>
 
+          {/* Listing Owner */}
           <section className="rounded-2xl border border-[#2a2d37] bg-[#16181e] p-5 sm:p-8">
             <h2 className="mb-5 text-lg font-semibold">Listing Owner</h2>
             <div className="grid gap-5 sm:grid-cols-2">
@@ -453,6 +522,7 @@ export default function AddStudioPage() {
                   className={`${inputClass} cursor-not-allowed text-gray-400`}
                 />
               </div>
+
               <div>
                 <label htmlFor="ownerEmail" className={labelClass}>
                   User Email
@@ -471,10 +541,11 @@ export default function AddStudioPage() {
             </p>
           </section>
 
+          {/* Form Actions */}
           <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
-              onClick={() => router.push("/my-listings")}
+              onClick={() => router.push("/dashboard/my-studios")}
               className="rounded-xl border border-[#343743] px-6 py-3 text-sm font-semibold text-gray-300 transition hover:bg-[#222630]"
             >
               Cancel

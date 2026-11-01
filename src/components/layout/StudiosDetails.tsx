@@ -13,6 +13,7 @@ import {
   FiMapPin,
   FiShield,
   FiUsers,
+  FiStar,
 } from "react-icons/fi";
 import { toast } from "sonner";
 
@@ -35,6 +36,7 @@ type Studio = {
   userName?: string;
   userEmail?: string;
   userImage?: string;
+  rating?: number;
 };
 
 type StudioDetailsProps = {
@@ -105,6 +107,7 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
     userName,
     userEmail,
     userImage,
+    rating,
   } = studio;
 
   const formattedRate = new Intl.NumberFormat("en-US", {
@@ -194,6 +197,7 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
         userName: user.name ?? "",
         userEmail: email,
         userImage: user.image ?? "",
+
         status: "Pending",
         bookingDate: new Date().toISOString(),
       };
@@ -325,6 +329,29 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
                   <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                     {title}
                   </h1>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <FiStar
+                        key={star}
+                        size={17}
+                        className={
+                          star <= Math.round(Number(rating) || 0)
+                            ? "fill-amber-400 text-amber-400"
+                            : "text-muted-foreground"
+                        }
+                      />
+                    ))}
+                  </div>
+
+                  <span className="text-sm font-semibold text-foreground">
+                    {Number(rating) > 0
+                      ? Number(rating).toFixed(1)
+                      : "No rating"}
+                  </span>
+
+                  <span className="text-sm text-muted-foreground">/ 5</span>
                 </div>
 
                 {/* Price */}

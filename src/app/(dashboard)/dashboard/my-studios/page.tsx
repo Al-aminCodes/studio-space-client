@@ -91,7 +91,7 @@ export default function MyStudiosPage() {
     try {
       setDeletingId(id);
 
-      const response = await fetch(`${API_URL}/studios/${id}`, {
+      const response = await fetch(`${API_URL}/my-listings/${id}`, {
         method: "DELETE",
       });
 
@@ -171,7 +171,7 @@ export default function MyStudiosPage() {
 
             <Link
               href="/dashboard/add-studio"
-              className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+              className="inline-flex items-center justify-center rounded-lg bg-[#ff6a00] px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
             >
               + Add New Studio
             </Link>
