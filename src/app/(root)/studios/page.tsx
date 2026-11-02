@@ -118,11 +118,11 @@ export default function ExploreStudiosPage() {
     }).format(Number(price) || 0);
 
   return (
-    <main className="min-h-screen bg-[#0d0e12] px-4 py-8 text-white sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-[var(--background)] px-4 py-8 text-[var(--foreground)] transition-colors duration-300 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <section className="mb-8">
-          <div className="mb-3 flex items-center gap-2 text-sm font-medium text-orange-400">
+          <div className="mb-3 flex items-center gap-2 text-sm font-medium text-[var(--accent)]">
             <Building2 size={17} />
             <span>STUDIOS DIRECTORY</span>
           </div>
@@ -132,15 +132,15 @@ export default function ExploreStudiosPage() {
               <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 Explore Studios
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-400 sm:text-base">
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)] sm:text-base">
                 Discover creative spaces for photography, film production,
                 podcasts, music, and more.
               </p>
             </div>
 
-            <div className="w-fit rounded-xl border border-[#2a2d37] bg-[#16181e] px-4 py-3">
-              <p className="text-xs text-gray-400">Available studios</p>
-              <p className="mt-1 text-2xl font-bold text-orange-400">
+            <div className="w-fit rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+              <p className="text-xs text-[var(--muted)]">Available studios</p>
+              <p className="mt-1 text-2xl font-bold text-[var(--accent)]">
                 {studios.length}
               </p>
             </div>
@@ -148,31 +148,31 @@ export default function ExploreStudiosPage() {
         </section>
 
         {/* Search and Filters */}
-        <section className="mb-8 rounded-2xl border border-[#2a2d37] bg-[#16181e] p-4 sm:p-5">
+        <section className="mb-8 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_220px_220px]">
             <div className="relative">
               <Search
                 size={19}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]"
               />
               <input
                 type="text"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search by studio, category, or location..."
-                className="w-full rounded-xl border border-[#2a2d37] bg-[#0d0e12] py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-orange-500"
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] py-3 pl-11 pr-4 text-sm text-[var(--foreground)] outline-none transition placeholder:opacity-60 focus:border-[var(--accent)]"
               />
             </div>
 
             <div className="relative">
               <SlidersHorizontal
                 size={17}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]"
               />
               <select
                 value={selectedCategory}
                 onChange={(event) => setSelectedCategory(event.target.value)}
-                className="w-full appearance-none rounded-xl border border-[#2a2d37] bg-[#0d0e12] px-10 py-3 text-sm text-white outline-none focus:border-orange-500"
+                className="w-full appearance-none rounded-xl border border-[var(--border)] bg-[var(--background)] px-10 py-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)]"
               >
                 {categories.map((category) => (
                   <option key={category} value={category}>
@@ -185,7 +185,7 @@ export default function ExploreStudiosPage() {
             <select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value)}
-              className="w-full rounded-xl border border-[#2a2d37] bg-[#0d0e12] px-4 py-3 text-sm text-white outline-none focus:border-orange-500"
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--accent)]"
             >
               <option value="default">Sort: Default</option>
               <option value="low">Price: Low to High</option>
@@ -197,8 +197,11 @@ export default function ExploreStudiosPage() {
         {/* Loading */}
         {loading && (
           <div className="flex min-h-64 items-center justify-center">
-            <div className="flex items-center gap-3 text-gray-400">
-              <Loader2 className="animate-spin text-orange-500" size={24} />
+            <div className="flex items-center gap-3 text-[var(--muted)]">
+              <Loader2
+                className="animate-spin text-[var(--accent)]"
+                size={24}
+              />
               <span>Loading studios...</span>
             </div>
           </div>
@@ -206,10 +209,10 @@ export default function ExploreStudiosPage() {
 
         {/* Empty State */}
         {!loading && filteredStudios.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-[#343743] bg-[#16181e] px-5 py-16 text-center">
-            <Building2 className="mx-auto mb-4 text-gray-500" size={42} />
+          <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] px-5 py-16 text-center">
+            <Building2 className="mx-auto mb-4 text-[var(--muted)]" size={42} />
             <h2 className="text-xl font-semibold">No studios found</h2>
-            <p className="mt-2 text-sm text-gray-400">
+            <p className="mt-2 text-sm text-[var(--muted)]">
               Try another search term or select a different category.
             </p>
 
@@ -219,7 +222,7 @@ export default function ExploreStudiosPage() {
                 setSelectedCategory("All");
                 setSortBy("default");
               }}
-              className="mt-5 rounded-lg bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600"
+              className="mt-5 rounded-lg bg-[var(--accent)] px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
             >
               Clear Filters
             </button>
@@ -232,10 +235,10 @@ export default function ExploreStudiosPage() {
             {filteredStudios.map((studio) => (
               <article
                 key={studio._id}
-                className="group overflow-hidden rounded-2xl border border-[#2a2d37] bg-[#16181e] transition duration-300 hover:-translate-y-1 hover:border-orange-500/50"
+                className="group overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] transition duration-300 hover:-translate-y-1 hover:border-[var(--accent)]"
               >
                 {/* Image */}
-                <div className="relative h-56 overflow-hidden bg-[#20222a]">
+                <div className="relative h-56 overflow-hidden bg-[var(--background)]">
                   {studio.imageUrl ? (
                     <img
                       src={studio.imageUrl}
@@ -243,7 +246,7 @@ export default function ExploreStudiosPage() {
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-gray-500">
+                    <div className="flex h-full items-center justify-center text-[var(--muted)]">
                       <ImageIcon size={44} />
                     </div>
                   )}
@@ -272,8 +275,11 @@ export default function ExploreStudiosPage() {
                     {studio.title}
                   </h2>
 
-                  <div className="mt-3 flex items-center gap-2 text-sm text-gray-400">
-                    <MapPin size={16} className="shrink-0 text-orange-400" />
+                  <div className="mt-3 flex items-center gap-2 text-sm text-[var(--muted)]">
+                    <MapPin
+                      size={16}
+                      className="shrink-0 text-[var(--accent)]"
+                    />
                     <span className="line-clamp-1">{studio.location}</span>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -285,26 +291,26 @@ export default function ExploreStudiosPage() {
                           className={
                             star <= Math.round(Number(studio.rating) || 0)
                               ? "fill-amber-400 text-amber-400"
-                              : "text-muted-foreground"
+                              : "text-[var(--muted)]"
                           }
                         />
                       ))}
                     </div>
 
-                    <span className="text-sm font-semibold text-foreground">
+                    <span className="text-sm font-semibold text-[var(--foreground)]">
                       {Number(studio.rating) > 0
                         ? Number(studio.rating).toFixed(1)
                         : "No rating"}
                     </span>
 
-                    <span className="text-sm text-muted-foreground">/ 5</span>
+                    <span className="text-sm text-[var(--muted)]">/ 5</span>
                   </div>
 
                   {/* Amenities Preview */}
 
                   <Link
                     href={`/studios/${studio._id}`}
-                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
                   >
                     <Eye size={17} />
                     View Details
@@ -326,13 +332,13 @@ export default function ExploreStudiosPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="studio-modal-title"
-            className="my-auto max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-[#343743] bg-[#16181e] shadow-2xl"
+            className="my-auto max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#2a2d37] bg-[#16181e] px-5 py-4">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-5 py-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-orange-400">
+                <p className="text-xs font-semibold uppercase tracking-widest text-[var(--accent)]">
                   Studio Details
                 </p>
                 <h2
@@ -346,7 +352,7 @@ export default function ExploreStudiosPage() {
               <button
                 onClick={() => setSelectedStudio(null)}
                 aria-label="Close studio details"
-                className="rounded-lg border border-[#343743] p-2 text-gray-400 transition hover:bg-[#252832] hover:text-white"
+                className="rounded-lg border border-[var(--border)] p-2 text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--foreground)]"
               >
                 <X size={20} />
               </button>
@@ -354,7 +360,7 @@ export default function ExploreStudiosPage() {
 
             <div className="p-5 sm:p-6">
               {/* Full Image */}
-              <div className="mb-6 h-56 overflow-hidden rounded-xl bg-[#20222a] sm:h-80">
+              <div className="mb-6 h-56 overflow-hidden rounded-xl bg-[var(--background)] sm:h-80">
                 {selectedStudio.imageUrl ? (
                   <img
                     src={selectedStudio.imageUrl}
@@ -362,20 +368,20 @@ export default function ExploreStudiosPage() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-gray-500">
+                  <div className="flex h-full items-center justify-center text-[var(--muted)]">
                     <ImageIcon size={48} />
                   </div>
                 )}
               </div>
 
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                <span className="rounded-lg bg-orange-500/10 px-3 py-2 text-sm font-medium text-orange-400">
+                <span className="rounded-lg bg-[var(--background)] px-3 py-2 text-sm font-medium text-[var(--accent)]">
                   {selectedStudio.category}
                 </span>
 
                 <p className="text-2xl font-bold">
                   ${formatPrice(selectedStudio.hourlyRate)}
-                  <span className="text-sm font-normal text-gray-400">
+                  <span className="text-sm font-normal text-[var(--muted)]">
                     {" "}
                     / hour
                   </span>
@@ -384,9 +390,9 @@ export default function ExploreStudiosPage() {
 
               {/* Main Information */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="rounded-xl border border-[#2a2d37] bg-[#0d0e12] p-4">
-                  <p className="mb-2 flex items-center gap-2 text-sm text-gray-400">
-                    <MapPin size={16} className="text-orange-400" />
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-4">
+                  <p className="mb-2 flex items-center gap-2 text-sm text-[var(--muted)]">
+                    <MapPin size={16} className="text-[var(--accent)]" />
                     Location / Address
                   </p>
                   <p className="break-words font-medium">
@@ -394,9 +400,9 @@ export default function ExploreStudiosPage() {
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-[#2a2d37] bg-[#0d0e12] p-4">
-                  <p className="mb-2 flex items-center gap-2 text-sm text-gray-400">
-                    <Users size={16} className="text-orange-400" />
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-4">
+                  <p className="mb-2 flex items-center gap-2 text-sm text-[var(--muted)]">
+                    <Users size={16} className="text-[var(--accent)]" />
                     Maximum Capacity
                   </p>
                   <p className="font-medium">
@@ -404,9 +410,9 @@ export default function ExploreStudiosPage() {
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-[#2a2d37] bg-[#0d0e12] p-4">
-                  <p className="mb-2 flex items-center gap-2 text-sm text-gray-400">
-                    <ShieldCheck size={16} className="text-orange-400" />
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-4">
+                  <p className="mb-2 flex items-center gap-2 text-sm text-[var(--muted)]">
+                    <ShieldCheck size={16} className="text-[var(--accent)]" />
                     Security Deposit
                   </p>
                   <p className="font-medium">
@@ -414,9 +420,9 @@ export default function ExploreStudiosPage() {
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-[#2a2d37] bg-[#0d0e12] p-4">
-                  <p className="mb-2 flex items-center gap-2 text-sm text-gray-400">
-                    <Clock size={16} className="text-orange-400" />
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-4">
+                  <p className="mb-2 flex items-center gap-2 text-sm text-[var(--muted)]">
+                    <Clock size={16} className="text-[var(--accent)]" />
                     Hourly Rate
                   </p>
                   <p className="font-medium">
@@ -428,7 +434,7 @@ export default function ExploreStudiosPage() {
               {/* Overview */}
               <div className="mt-6">
                 <h3 className="text-lg font-semibold">Detailed Overview</h3>
-                <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-gray-400">
+                <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-[var(--muted)]">
                   {selectedStudio.overview || "No overview provided."}
                 </p>
               </div>
@@ -444,32 +450,32 @@ export default function ExploreStudiosPage() {
                     {selectedStudio.amenities.map((amenity) => (
                       <span
                         key={amenity}
-                        className="rounded-lg border border-[#343743] bg-[#0d0e12] px-3 py-2 text-sm text-gray-300"
+                        className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm text-[var(--muted)]"
                       >
                         {amenity}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <p className="mt-2 text-sm text-gray-500">
+                  <p className="mt-2 text-sm text-[var(--muted)]">
                     No amenities listed.
                   </p>
                 )}
               </div>
 
               {/* Owner Information */}
-              <div className="mt-6 rounded-xl border border-[#2a2d37] bg-[#0d0e12] p-4">
+              <div className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--background)] p-4">
                 <h3 className="mb-4 font-semibold">Studio Owner</h3>
 
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
                     <UserRound
                       size={18}
-                      className="mt-0.5 shrink-0 text-orange-400"
+                      className="mt-0.5 shrink-0 text-[var(--accent)]"
                     />
                     <div>
-                      <p className="text-xs text-gray-500">Owner Name</p>
-                      <p className="mt-1 break-words text-sm text-gray-200">
+                      <p className="text-xs text-[var(--muted)]">Owner Name</p>
+                      <p className="mt-1 break-words text-sm text-[var(--foreground)]">
                         {selectedStudio.userName || "Not provided"}
                       </p>
                     </div>
@@ -478,11 +484,11 @@ export default function ExploreStudiosPage() {
                   <div className="flex items-start gap-3">
                     <Mail
                       size={18}
-                      className="mt-0.5 shrink-0 text-orange-400"
+                      className="mt-0.5 shrink-0 text-[var(--accent)]"
                     />
                     <div>
-                      <p className="text-xs text-gray-500">Owner Email</p>
-                      <p className="mt-1 break-all text-sm text-gray-200">
+                      <p className="text-xs text-[var(--muted)]">Owner Email</p>
+                      <p className="mt-1 break-all text-sm text-[var(--foreground)]">
                         {selectedStudio.userEmail || "Not provided"}
                       </p>
                     </div>
@@ -492,7 +498,7 @@ export default function ExploreStudiosPage() {
 
               <button
                 onClick={() => setSelectedStudio(null)}
-                className="mt-6 w-full rounded-xl border border-[#343743] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#252832]"
+                className="mt-6 w-full rounded-xl border border-[var(--border)] px-4 py-3 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)]"
               >
                 Close Details
               </button>

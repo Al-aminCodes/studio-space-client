@@ -1,4 +1,5 @@
 "use client";
+
 import { authClient, useSession } from "@/lib/auth-client";
 import Image from "next/image";
 import Link from "next/link";
@@ -39,68 +40,23 @@ type Studio = {
   rating?: number;
 };
 
+type Booking = {
+  studioId?: string;
+  status?: string;
+};
+
 type StudioDetailsProps = {
   studio: Studio;
 };
 
 export default function StudioDetails({ studio }: StudioDetailsProps) {
-  const [alreadyBooked, setAlreadyBooked] = useState(false);
-  const [checkingBooking, setCheckingBooking] = useState(true);
+  const router = useRouter();
   const { data: session, isPending: sessionLoading } = useSession();
 
-  useEffect(() => {
-    const checkBooking = async () => {
-      const user = session?.user;
-      const { data, error } = await authClient.token();
-      const token = data?.token;
+  const [alreadyBooked, setAlreadyBooked] = useState(false);
+  const [checkingBooking, setCheckingBooking] = useState(true);
+  const [bookingLoading, setBookingLoading] = useState(false);
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-      if (sessionLoading) return;
-
-      if (!user?.email || !studio?._id || !apiUrl) {
-        setAlreadyBooked(false);
-        setCheckingBooking(false);
-        return;
-      }
-
-      try {
-        setCheckingBooking(true);
-
-        const response = await fetch(
-          `${apiUrl}/my-bookings/${encodeURIComponent(user.email)}`,
-          {
-            cache: "no-store",
-            headers: {
-              authorization: `Bearer ${token}`,
-            },
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch bookings");
-        }
-
-        const data = await response.json();
-
-        const bookings = Array.isArray(data) ? data : (data.bookings ?? []);
-
-        const exists = bookings.some(
-          (booking: { studioId?: string; status?: string }) =>
-            String(booking.studioId) === String(studio._id) &&
-            ["Pending", "Confirmed"].includes(booking.status ?? ""),
-        );
-
-        setAlreadyBooked(exists);
-      } catch (error) {
-        console.error("Booking check error:", error);
-      } finally {
-        setCheckingBooking(false);
-      }
-    };
-
-    checkBooking();
-  }, [session?.user, sessionLoading, studio?._id]);
   const {
     _id,
     title,
@@ -118,24 +74,92 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
     rating,
   } = studio;
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
   const formattedRate = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
-  }).format(hourlyRate);
+  }).format(Number(hourlyRate) || 0);
 
   const formattedDeposit = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
     maximumFractionDigits: 0,
-  }).format(securityDeposit);
+  }).format(Number(securityDeposit) || 0);
 
-  const router = useRouter();
+  const currentRating = Math.min(5, Math.max(0, Number(rating) || 0));
 
-  const [bookingLoading, setBookingLoading] = useState(false);
+  // Check existing booking
+  useEffect(() => {
+    if (sessionLoading) return;
 
+    let cancelled = false;
+
+    async function checkBooking() {
+      const email = session?.user?.email;
+
+      if (!email || !studio?._id || !apiUrl) {
+        setAlreadyBooked(false);
+        setCheckingBooking(false);
+        return;
+      }
+
+      setCheckingBooking(true);
+
+      try {
+        const { data, error } = await authClient.token();
+
+        if (error || !data?.token) {
+          throw new Error("Unable to verify your session.");
+        }
+
+        const response = await fetch(
+          `${apiUrl}/my-bookings/${encodeURIComponent(
+            email.trim().toLowerCase(),
+          )}`,
+          {
+            cache: "no-store",
+            headers: {
+              authorization: `Bearer ${data.token}`,
+            },
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch bookings.");
+        }
+
+        const result = await response.json();
+
+        const bookings: Booking[] = Array.isArray(result)
+          ? result
+          : (result.bookings ?? []);
+
+        const exists = bookings.some(
+          (booking) =>
+            String(booking.studioId) === String(studio._id) &&
+            ["Pending", "Confirmed"].includes(booking.status ?? ""),
+        );
+
+        if (!cancelled) setAlreadyBooked(exists);
+      } catch (error) {
+        console.error("Booking check error:", error);
+      } finally {
+        if (!cancelled) setCheckingBooking(false);
+      }
+    }
+
+    void checkBooking();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.email, sessionLoading, studio?._id, apiUrl]);
+
+  // Create booking
   const handleBooking = async () => {
-    if (sessionLoading || bookingLoading) return;
+    if (sessionLoading || bookingLoading || alreadyBooked) return;
 
     const user = session?.user;
 
@@ -145,15 +169,8 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
       return;
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-    if (!apiUrl) {
-      toast.error("Server URL is not configured.");
-      return;
-    }
-
-    if (!studio?._id) {
-      toast.error("Studio information is missing.");
+    if (!apiUrl || !studio?._id) {
+      toast.error("Studio or server information is missing.");
       return;
     }
 
@@ -162,16 +179,21 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
     try {
       const email = user.email.trim().toLowerCase();
       const studioId = String(studio._id);
-      const { data } = await authClient.token();
-      const token = data?.token;
 
-      // Step 1: Check existing bookings
+      const { data, error } = await authClient.token();
+
+      if (error || !data?.token) {
+        toast.error("Please log in again.");
+        router.push("/login");
+        return;
+      }
+
       const checkResponse = await fetch(
         `${apiUrl}/my-bookings/${encodeURIComponent(email)}`,
         {
           cache: "no-store",
           headers: {
-            authorization: `Bearer ${token}`,
+            authorization: `Bearer ${data.token}`,
           },
         },
       );
@@ -182,37 +204,36 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
 
       const existingData = await checkResponse.json();
 
-      const existingBookings = Array.isArray(existingData)
+      const bookings: Booking[] = Array.isArray(existingData)
         ? existingData
         : (existingData.bookings ?? []);
 
-      const alreadyBooked = existingBookings.some(
-        (booking: { studioId?: string; status?: string }) =>
+      const exists = bookings.some(
+        (booking) =>
           String(booking.studioId) === studioId &&
           ["Pending", "Confirmed"].includes(booking.status ?? ""),
       );
 
-      if (alreadyBooked) {
+      if (exists) {
+        setAlreadyBooked(true);
         toast.info("You have already booked this studio.");
         return;
       }
 
-      // Step 2: Create booking
       const bookingData = {
         studioId,
-        studioTitle: studio.title,
-        category: studio.category,
-        hourlyRate: studio.hourlyRate,
-        securityDeposit: studio.securityDeposit,
-        maxCapacity: studio.maxCapacity,
-        location: studio.location,
-        imageUrl: studio.imageUrl ?? "",
-        amenities: studio.amenities ?? [],
-        overview: studio.overview,
+        studioTitle: title,
+        category,
+        hourlyRate,
+        securityDeposit,
+        maxCapacity,
+        location,
+        imageUrl: imageUrl ?? "",
+        amenities,
+        overview,
         userName: user.name ?? "",
         userEmail: email,
         userImage: user.image ?? "",
-
         status: "Pending",
         bookingDate: new Date().toISOString(),
       };
@@ -221,7 +242,7 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          authorization: `Bearer ${token}`,
+          authorization: `Bearer ${data.token}`,
         },
         body: JSON.stringify(bookingData),
       });
@@ -229,6 +250,7 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
       const result = await response.json().catch(() => null);
 
       if (response.status === 409) {
+        setAlreadyBooked(true);
         toast.info(result?.message || "You have already booked this studio.");
         return;
       }
@@ -237,13 +259,12 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
         throw new Error(result?.message || "Booking failed.");
       }
 
+      setAlreadyBooked(true);
       toast.success("Studio booked successfully!");
-
       router.push("/dashboard/my-bookings");
       router.refresh();
     } catch (error) {
       console.error("Booking error:", error);
-
       toast.error(
         error instanceof Error ? error.message : "Something went wrong.",
       );
@@ -253,22 +274,33 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground transition-colors duration-300">
+    <main
+      className="min-h-screen transition-colors duration-300"
+      style={{
+        backgroundColor: "var(--background)",
+        color: "var(--foreground)",
+      }}
+    >
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Back Navigation */}
         <Link
           href="/studios"
-          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+          className="mb-6 inline-flex items-center gap-2 text-sm font-medium transition-colors hover:opacity-75"
+          style={{ color: "var(--muted)" }}
         >
           <FiArrowLeft size={16} />
           Back to Studios
         </Link>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-          {/* Left Section */}
+          {/* Left section */}
           <section className="space-y-7 lg:col-span-7">
-            {/* Studio Image */}
-            <div className="relative h-[280px] overflow-hidden rounded-2xl border border-border bg-muted sm:h-[420px]">
+            <div
+              className="relative h-[280px] overflow-hidden rounded-2xl border sm:h-[420px]"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderColor: "var(--border)",
+              }}
+            >
               {imageUrl ? (
                 <Image
                   src={imageUrl}
@@ -280,36 +312,36 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
                   className="object-cover"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-muted-foreground">
+                <div
+                  className="flex h-full items-center justify-center"
+                  style={{ color: "var(--muted)" }}
+                >
                   No studio image available
                 </div>
               )}
 
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5">
-                <Badge className="border border-white/20 bg-white/95 text-gray-900 hover:bg-white/95">
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-5">
+                <Badge className="border border-white/20 bg-white text-gray-900">
                   {category}
                 </Badge>
               </div>
             </div>
 
-            {/* About Studio */}
             <div>
-              <h2 className="mb-3 text-xl font-bold text-foreground">
-                About this Space
-              </h2>
+              <h2 className="mb-3 text-xl font-bold">About this Space</h2>
 
-              <p className="whitespace-pre-wrap text-sm leading-7 text-muted-foreground sm:text-base">
+              <p
+                className="whitespace-pre-wrap text-sm leading-7 sm:text-base"
+                style={{ color: "var(--muted)" }}
+              >
                 {overview || "No overview information available."}
               </p>
             </div>
 
-            <Separator />
+            <Separator style={{ backgroundColor: "var(--border)" }} />
 
-            {/* Amenities */}
             <div>
-              <h2 className="mb-4 text-xl font-bold text-foreground">
-                Amenities
-              </h2>
+              <h2 className="mb-4 text-xl font-bold">Amenities</h2>
 
               {amenities.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
@@ -317,97 +349,138 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
                     <Badge
                       key={`${amenity}-${index}`}
                       variant="outline"
-                      className="rounded-full border-border bg-card px-4 py-2 text-sm font-medium text-card-foreground"
+                      className="rounded-full px-4 py-2 text-sm font-medium"
+                      style={{
+                        backgroundColor: "var(--surface)",
+                        borderColor: "var(--border)",
+                        color: "var(--foreground)",
+                      }}
                     >
-                      <FiCheckCircle className="mr-2 text-green-600 dark:text-green-400" />
+                      <FiCheckCircle className="mr-2 text-green-500" />
                       {amenity}
                     </Badge>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm" style={{ color: "var(--muted)" }}>
                   No amenities information available.
                 </p>
               )}
             </div>
           </section>
 
-          {/* Right Section */}
+          {/* Right section */}
           <aside className="space-y-5 lg:col-span-5">
-            {/* Studio Information */}
-            <Card className="border-border bg-card text-card-foreground shadow-sm transition-colors duration-300">
+            <Card
+              className="shadow-sm transition-colors duration-300"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderColor: "var(--border)",
+                color: "var(--foreground)",
+              }}
+            >
               <CardContent className="space-y-5 p-5 sm:p-6">
                 <div>
-                  <Badge className="mb-3 border-0 bg-violet-100 text-violet-700 hover:bg-violet-100 dark:bg-violet-500/15 dark:text-violet-300 dark:hover:bg-violet-500/15">
+                  <Badge
+                    className="mb-3 border-0 text-white"
+                    style={{ backgroundColor: "var(--accent)" }}
+                  >
                     {category}
                   </Badge>
 
-                  <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                  <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                     {title}
                   </h1>
-                </div>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <FiStar
-                        key={star}
-                        size={17}
-                        className={
-                          star <= Math.round(Number(rating) || 0)
-                            ? "fill-amber-400 text-amber-400"
-                            : "text-muted-foreground"
-                        }
-                      />
-                    ))}
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FiStar
+                          key={star}
+                          size={17}
+                          className={
+                            star <= Math.round(currentRating)
+                              ? "fill-amber-400 text-amber-400"
+                              : ""
+                          }
+                          style={
+                            star > Math.round(currentRating)
+                              ? { color: "var(--muted)" }
+                              : undefined
+                          }
+                        />
+                      ))}
+                    </div>
+
+                    <span className="text-sm font-semibold">
+                      {currentRating > 0
+                        ? currentRating.toFixed(1)
+                        : "No rating"}
+                    </span>
+
+                    <span className="text-sm" style={{ color: "var(--muted)" }}>
+                      / 5
+                    </span>
                   </div>
-
-                  <span className="text-sm font-semibold text-foreground">
-                    {Number(rating) > 0
-                      ? Number(rating).toFixed(1)
-                      : "No rating"}
-                  </span>
-
-                  <span className="text-sm text-muted-foreground">/ 5</span>
                 </div>
 
-                {/* Price */}
                 <div>
-                  <p className="text-3xl font-bold text-foreground">
+                  <p className="text-3xl font-bold tracking-tight">
                     {formattedRate}
-                    <span className="ml-1 text-base font-normal text-muted-foreground">
+                    <span
+                      className="ml-1 text-base font-normal"
+                      style={{ color: "var(--muted)" }}
+                    >
                       / hr
                     </span>
                   </p>
                 </div>
 
-                <Separator />
+                <Separator style={{ backgroundColor: "var(--border)" }} />
 
-                {/* Studio Features */}
-                <div className="space-y-4 text-sm text-muted-foreground">
+                <div
+                  className="space-y-4 text-sm"
+                  style={{ color: "var(--muted)" }}
+                >
                   <div className="flex items-start gap-3">
-                    <FiMapPin className="mt-0.5 shrink-0" size={18} />
+                    <FiMapPin
+                      className="mt-0.5 shrink-0"
+                      size={18}
+                      style={{ color: "var(--accent)" }}
+                    />
                     <span>{location}</span>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <FiUsers className="shrink-0" size={18} />
+                    <FiUsers
+                      className="shrink-0"
+                      size={18}
+                      style={{ color: "var(--accent)" }}
+                    />
                     <span>Max Capacity: {maxCapacity} People</span>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <FiShield className="shrink-0" size={18} />
+                    <FiShield
+                      className="shrink-0"
+                      size={18}
+                      style={{ color: "var(--accent)" }}
+                    />
                     <span>Security Deposit: {formattedDeposit}</span>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <FiClock className="shrink-0" size={18} />
+                    <FiClock
+                      className="shrink-0"
+                      size={18}
+                      style={{ color: "var(--accent)" }}
+                    />
                     <span>Hourly Booking Available</span>
                   </div>
                 </div>
 
-                <Separator />
+                <Separator style={{ backgroundColor: "var(--border)" }} />
 
-                {/* Booking Actions */}
                 <div className="flex gap-3">
                   <Button
                     onClick={handleBooking}
@@ -417,11 +490,12 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
                       bookingLoading ||
                       alreadyBooked
                     }
-                    className={`w-full transition-colors ${
-                      alreadyBooked
-                        ? "bg-green-600 hover:bg-green-600 text-white cursor-not-allowed"
-                        : "h-12 flex-1 border-0 bg-indigo-600 font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-indigo-500 dark:text-white dark:hover:bg-indigo-600"
-                    }`}
+                    className="h-12 flex-1 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                    style={{
+                      backgroundColor: alreadyBooked
+                        ? "#16a34a"
+                        : "var(--accent)",
+                    }}
                   >
                     {sessionLoading || checkingBooking
                       ? "Checking Booking..."
@@ -433,10 +507,19 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
                   </Button>
 
                   <Button
+                    type="button"
                     variant="outline"
                     size="icon"
-                    className="h-12 w-12 shrink-0 border-border"
+                    className="h-12 w-12 shrink-0"
+                    style={{
+                      backgroundColor: "var(--background)",
+                      borderColor: "var(--border)",
+                      color: "var(--foreground)",
+                    }}
                     aria-label="Add to favorites"
+                    onClick={() =>
+                      toast.info("Favorites feature is coming soon.")
+                    }
                   >
                     <FiHeart size={20} />
                   </Button>
@@ -444,39 +527,55 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
               </CardContent>
             </Card>
 
-            {/* Host Information */}
-            <Card className="border-border bg-card text-card-foreground shadow-sm transition-colors duration-300">
+            {/* Host information */}
+            <Card
+              className="shadow-sm transition-colors duration-300"
+              style={{
+                backgroundColor: "var(--surface)",
+                borderColor: "var(--border)",
+                color: "var(--foreground)",
+              }}
+            >
               <CardContent className="p-5 sm:p-6">
-                <h2 className="mb-5 font-bold text-foreground">
-                  Host Information
-                </h2>
+                <h2 className="mb-5 font-bold">Host Information</h2>
 
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
+                  <div
+                    className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border text-lg font-bold"
+                    style={{
+                      backgroundColor: "var(--background)",
+                      borderColor: "var(--border)",
+                      color: "var(--accent)",
+                    }}
+                  >
                     {userImage ? (
-                      <img
+                      <Image
                         src={userImage}
-                        alt={userName}
-                        className="rounded-full"
+                        alt={userName || "Studio host"}
+                        fill
+                        unoptimized
+                        sizes="48px"
+                        className="object-cover"
                       />
                     ) : (
-                      "H"
+                      userName?.trim().charAt(0).toUpperCase() || "H"
                     )}
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-foreground">
+                    <h3 className="font-semibold">
                       {userName || "Studio Host"}
                     </h3>
 
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm" style={{ color: "var(--muted)" }}>
                       Studio Owner
                     </p>
 
                     {userEmail && (
                       <a
                         href={`mailto:${userEmail}`}
-                        className="mt-1 flex items-center gap-1 break-all text-xs text-primary hover:underline"
+                        className="mt-1 flex items-center gap-1 break-all text-xs hover:underline"
+                        style={{ color: "var(--accent)" }}
                       >
                         <FiMail size={13} className="shrink-0" />
                         {userEmail}

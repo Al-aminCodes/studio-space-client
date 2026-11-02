@@ -69,9 +69,9 @@ const initialForm: StudioFormData = {
 };
 
 const inputClass =
-  "w-full rounded-xl border border-[#343743] bg-[#101116] px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20";
+  "w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20";
 
-const labelClass = "mb-2 block text-sm font-medium text-gray-300";
+const labelClass = "mb-2 block text-sm font-medium text-[var(--foreground)]";
 
 export default function AddStudioPage() {
   const router = useRouter();
@@ -207,8 +207,8 @@ export default function AddStudioPage() {
 
   if (isPending) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center bg-[#0d0e12] text-white">
-        <Loader2 className="mr-3 h-6 w-6 animate-spin text-orange-500" />
+      <div className="flex min-h-[60vh] items-center justify-center bg-[var(--background)] text-[var(--foreground)]">
+        <Loader2 className="mr-3 h-6 w-6 animate-spin text-[var(--accent)]" />
         Loading your account...
       </div>
     );
@@ -216,13 +216,15 @@ export default function AddStudioPage() {
 
   if (!session?.user) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-[#0d0e12] px-4 text-white">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-[var(--background)] px-4 text-[var(--foreground)]">
         <h2 className="text-2xl font-bold">Login Required</h2>
-        <p className="text-sm text-gray-400">Log in to add a studio listing.</p>
+        <p className="text-sm text-[var(--muted)]">
+          Log in to add a studio listing.
+        </p>
         <button
           type="button"
           onClick={() => router.push("/login")}
-          className="rounded-xl bg-orange-500 px-5 py-3 font-semibold text-white hover:bg-orange-600"
+          className="rounded-xl bg-[var(--accent)] px-5 py-3 font-semibold text-white hover:opacity-90"
         >
           Go to Login
         </button>
@@ -231,21 +233,21 @@ export default function AddStudioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0e12] px-4 py-8 text-white sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[var(--background)] px-4 py-8 text-[var(--foreground)] transition-colors duration-300 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
         <div className="mb-8">
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-orange-500">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.22em] text-[var(--accent)]">
             StudioSpace / Listings
           </p>
           <h1 className="text-3xl font-bold sm:text-4xl">Add New Studio</h1>
-          <p className="mt-2 text-sm text-gray-400 sm:text-base">
+          <p className="mt-2 text-sm text-[var(--muted)] sm:text-base">
             Share your creative space with the StudioSpace community.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-7">
           {/* Studio Information */}
-          <section className="rounded-2xl border border-[#2a2d37] bg-[#16181e] p-5 sm:p-8">
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8">
             <h2 className="mb-6 text-lg font-semibold">Studio Information</h2>
 
             <div className="grid gap-5 sm:grid-cols-2">
@@ -288,7 +290,7 @@ export default function AddStudioPage() {
 
               <div>
                 <label htmlFor="location" className={labelClass}>
-                  <MapPin className="mr-1 inline h-4 w-4 text-orange-400" />
+                  <MapPin className="mr-1 inline h-4 w-4 text-[var(--accent)]" />
                   Location / Address *
                 </label>
                 <input
@@ -304,7 +306,7 @@ export default function AddStudioPage() {
 
               <div>
                 <label htmlFor="hourlyRate" className={labelClass}>
-                  <DollarSign className="mr-1 inline h-4 w-4 text-orange-400" />
+                  <DollarSign className="mr-1 inline h-4 w-4 text-[var(--accent)]" />
                   Hourly Rate ($) *
                 </label>
                 <input
@@ -341,7 +343,7 @@ export default function AddStudioPage() {
 
               <div>
                 <label htmlFor="maxCapacity" className={labelClass}>
-                  <Users className="mr-1 inline h-4 w-4 text-orange-400" />
+                  <Users className="mr-1 inline h-4 w-4 text-[var(--accent)]" />
                   Maximum Capacity *
                 </label>
                 <input
@@ -358,7 +360,7 @@ export default function AddStudioPage() {
               </div>
 
               {/* Rating Field */}
-              <div className="rounded-xl border border-[#343743] bg-[#101116] p-4">
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-4">
                 <label className={labelClass}>
                   <Star className="mr-1 inline h-4 w-4 text-amber-400" />
                   Studio Rating *
@@ -388,14 +390,14 @@ export default function AddStudioPage() {
                             rating: star,
                           }))
                         }
-                        className="rounded-md p-1 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                        className="rounded-md p-1 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                       >
                         <Star
                           size={30}
                           className={
                             active
                               ? "fill-amber-400 text-amber-400"
-                              : "text-gray-500"
+                              : "text-[var(--muted)]"
                           }
                         />
                       </button>
@@ -403,7 +405,7 @@ export default function AddStudioPage() {
                   })}
                 </div>
 
-                <p className="mt-2 text-sm text-gray-400">
+                <p className="mt-2 text-sm text-[var(--muted)]">
                   {form.rating > 0
                     ? `${form.rating}.0 out of 5 stars`
                     : "Select a rating from 1 to 5"}
@@ -412,7 +414,7 @@ export default function AddStudioPage() {
 
               <div>
                 <label htmlFor="imageUrl" className={labelClass}>
-                  <ImageIcon className="mr-1 inline h-4 w-4 text-orange-400" />
+                  <ImageIcon className="mr-1 inline h-4 w-4 text-[var(--accent)]" />
                   Image URL
                 </label>
                 <input
@@ -428,12 +430,14 @@ export default function AddStudioPage() {
               {form.imageUrl.trim() &&
                 /^https?:\/\/\S+$/i.test(form.imageUrl.trim()) && (
                   <div className="sm:col-span-2">
-                    <p className="mb-2 text-xs text-gray-400">Image preview</p>
+                    <p className="mb-2 text-xs text-[var(--muted)]">
+                      Image preview
+                    </p>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={form.imageUrl}
                       alt="Studio preview"
-                      className="h-48 w-full rounded-xl border border-[#343743] object-cover"
+                      className="h-48 w-full rounded-xl border border-[var(--border)] object-cover"
                     />
                   </div>
                 )}
@@ -441,9 +445,9 @@ export default function AddStudioPage() {
           </section>
 
           {/* Amenities */}
-          <section className="rounded-2xl border border-[#2a2d37] bg-[#16181e] p-5 sm:p-8">
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8">
             <h2 className="mb-2 text-lg font-semibold">Amenities</h2>
-            <p className="mb-5 text-sm text-gray-400">
+            <p className="mb-5 text-sm text-[var(--muted)]">
               Select the amenities available in your studio.
             </p>
 
@@ -456,15 +460,15 @@ export default function AddStudioPage() {
                     key={amenity}
                     className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm transition ${
                       checked
-                        ? "border-orange-500 bg-orange-500/10 text-orange-300"
-                        : "border-[#343743] bg-[#101116] text-gray-300 hover:border-gray-500"
+                        ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]"
+                        : "border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[var(--accent)]"
                     }`}
                   >
                     <input
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleAmenity(amenity)}
-                      className="h-4 w-4 accent-orange-500"
+                      className="h-4 w-4 accent-[var(--accent)]"
                     />
                     <span>{amenity}</span>
                   </label>
@@ -479,7 +483,7 @@ export default function AddStudioPage() {
                     key={amenity}
                     type="button"
                     onClick={() => toggleAmenity(amenity)}
-                    className="inline-flex items-center gap-1 rounded-full bg-orange-500/10 px-3 py-1.5 text-xs text-orange-300"
+                    className="inline-flex items-center gap-1 rounded-full bg-[var(--accent)]/10 px-3 py-1.5 text-xs text-[var(--accent)]"
                   >
                     {amenity}
                     <X className="h-3 w-3" />
@@ -490,7 +494,7 @@ export default function AddStudioPage() {
           </section>
 
           {/* Overview */}
-          <section className="rounded-2xl border border-[#2a2d37] bg-[#16181e] p-5 sm:p-8">
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8">
             <h2 className="mb-5 text-lg font-semibold">Detailed Overview</h2>
             <label htmlFor="overview" className={labelClass}>
               Describe your studio *
@@ -505,13 +509,13 @@ export default function AddStudioPage() {
               maxLength={5000}
               required
             />
-            <p className="mt-2 text-right text-xs text-gray-500">
+            <p className="mt-2 text-right text-xs text-[var(--muted)]">
               {form.overview.length}/5000
             </p>
           </section>
 
           {/* Listing Owner */}
-          <section className="rounded-2xl border border-[#2a2d37] bg-[#16181e] p-5 sm:p-8">
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8">
             <h2 className="mb-5 text-lg font-semibold">Listing Owner</h2>
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
@@ -522,7 +526,7 @@ export default function AddStudioPage() {
                   id="ownerName"
                   value={userName}
                   readOnly
-                  className={`${inputClass} cursor-not-allowed text-gray-400`}
+                  className={`${inputClass} cursor-not-allowed opacity-70`}
                 />
               </div>
 
@@ -535,11 +539,11 @@ export default function AddStudioPage() {
                   type="email"
                   value={userEmail}
                   readOnly
-                  className={`${inputClass} cursor-not-allowed text-gray-400`}
+                  className={`${inputClass} cursor-not-allowed opacity-70`}
                 />
               </div>
             </div>
-            <p className="mt-3 text-xs text-gray-500">
+            <p className="mt-3 text-xs text-[var(--muted)]">
               Owner information comes from your logged-in account.
             </p>
           </section>
@@ -549,7 +553,7 @@ export default function AddStudioPage() {
             <button
               type="button"
               onClick={() => router.push("/dashboard/my-studios")}
-              className="rounded-xl border border-[#343743] px-6 py-3 text-sm font-semibold text-gray-300 transition hover:bg-[#222630]"
+              className="rounded-xl border border-[var(--border)] px-6 py-3 text-sm font-semibold text-[var(--foreground)] transition hover:border-[var(--accent)]"
             >
               Cancel
             </button>
@@ -557,7 +561,7 @@ export default function AddStudioPage() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-7 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/10 transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-7 py-3 text-sm font-bold text-white shadow-lg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {saving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
