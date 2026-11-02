@@ -1,4 +1,4 @@
-import StudioDetails from "@/components/layout/StudiosDetails";
+import StudioDetails from "@/components/studio-details/StudioDetails";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
