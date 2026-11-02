@@ -162,11 +162,18 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
     try {
       const email = user.email.trim().toLowerCase();
       const studioId = String(studio._id);
+      const { data } = await authClient.token();
+      const token = data?.token;
 
       // Step 1: Check existing bookings
       const checkResponse = await fetch(
         `${apiUrl}/my-bookings/${encodeURIComponent(email)}`,
-        { cache: "no-store" },
+        {
+          cache: "no-store",
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
+        },
       );
 
       if (!checkResponse.ok) {
@@ -214,6 +221,7 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(bookingData),
       });
