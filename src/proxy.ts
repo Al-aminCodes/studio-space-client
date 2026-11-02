@@ -26,6 +26,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 export const config: ProxyConfig = {
   matcher: [
     "/studios/:path",
+    "/dashboard",
     "/dashboard/profile",
     "/dashboard/add-studio",
     "/dashboard/my-bookings",
