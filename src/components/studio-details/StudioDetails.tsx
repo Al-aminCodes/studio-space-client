@@ -323,6 +323,7 @@ export default function StudioDetails({ studio }: StudioDetailsProps) {
               checkingBooking={checkingBooking}
               bookingLoading={bookingLoading}
               alreadyBooked={alreadyBooked}
+              isStudioOwner={isStudioOwner}
               onBooking={handleBooking}
               onFavorite={() => toast.info("Favorites feature is coming soon.")}
             />

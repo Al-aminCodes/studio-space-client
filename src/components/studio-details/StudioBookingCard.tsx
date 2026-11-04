@@ -26,6 +26,7 @@ type StudioBookingCardProps = {
   checkingBooking: boolean;
   bookingLoading: boolean;
   alreadyBooked: boolean;
+  isStudioOwner: boolean;
 
   onBooking: () => void;
   onFavorite: () => void;
@@ -43,6 +44,7 @@ export default function StudioBookingCard({
   checkingBooking,
   bookingLoading,
   alreadyBooked,
+  isStudioOwner,
   onBooking,
   onFavorite,
 }: StudioBookingCardProps) {
@@ -168,6 +170,7 @@ export default function StudioBookingCard({
           <Button
             onClick={onBooking}
             disabled={
+              isStudioOwner ||
               sessionLoading ||
               checkingBooking ||
               bookingLoading ||
@@ -175,16 +178,22 @@ export default function StudioBookingCard({
             }
             className="h-12 flex-1 font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
             style={{
-              backgroundColor: alreadyBooked ? "#16a34a" : "var(--accent)",
+              backgroundColor: isStudioOwner
+                ? "var(--muted)"
+                : alreadyBooked
+                  ? "#16a34a"
+                  : "var(--accent)",
             }}
           >
-            {sessionLoading || checkingBooking
-              ? "Checking Booking..."
-              : bookingLoading
-                ? "Booking..."
-                : alreadyBooked
-                  ? "Already Booked ✓"
-                  : "Book This Studio"}
+            {isStudioOwner
+              ? "Your Own Studio"
+              : sessionLoading || checkingBooking
+                ? "Checking Booking..."
+                : bookingLoading
+                  ? "Booking..."
+                  : alreadyBooked
+                    ? "Already Booked ✓"
+                    : "Book This Studio"}
           </Button>
 
           <Button

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
 import { useState } from "react";
 import { Aperture, Eye, EyeOff, LoaderCircle, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
@@ -9,7 +10,8 @@ import { authClient } from "@/lib/auth-client";
 
 function getRedirectPath() {
   const params = new URLSearchParams(window.location.search);
-  const path = params.get("callbackURL") || params.get("redirect") || "/";
+  const path = params.get("callbackURL") || "/";
+
   return path.startsWith("/") && !path.startsWith("//") ? path : "/";
 }
 

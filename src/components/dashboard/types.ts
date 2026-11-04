@@ -6,23 +6,38 @@ export type DashboardUser = {
 };
 
 export type Studio = {
-  id: number;
-  name: string;
+  _id: string;
+  title: string;
   category: string;
+  hourlyRate: number;
+  securityDeposit: number;
+  maxCapacity: number;
   location: string;
-  price: number;
-  status: "Active" | "Pending";
-  image: string;
-  rating: number;
+  imageUrl: string;
+  amenities: string[];
+  overview: string;
+  userEmail: string;
+  userName: string;
+  status: "Active" | "Inactive" | "Pending" | "Rejected";
 };
 
 export type Booking = {
-  id: number;
-  studio: string;
-  customer: string;
-  date: string;
-  amount: number;
-  status: "Confirmed" | "Pending" | "Cancelled";
+  _id: string;
+  studioId: string;
+  studioTitle: string;
+  category: string;
+  hourlyRate: number;
+  securityDeposit: number;
+  maxCapacity: number;
+  location: string;
+  imageUrl: string;
+  amenities: string[];
+  overview: string;
+  bookingDate: string;
+  status: "Pending" | "Confirmed" | "Cancelled";
+  userEmail: string;
+  userName: string;
+  userImage: string;
 };
 
 export type DashboardSection =

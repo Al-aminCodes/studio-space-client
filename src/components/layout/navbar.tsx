@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Aperture,
   Menu,
@@ -171,6 +171,14 @@ function ProfileMenu({ user, loggingOut, onLogout }: ProfileMenuProps) {
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+
+  const searchParams = useSearchParams();
+
+  const currentUrl = `${pathname}${
+    searchParams.toString() ? `?${searchParams.toString()}` : ""
+  }`;
+
+  const loginHref = `/login?callbackURL=${encodeURIComponent(currentUrl)}`;
   const { data: session, isPending } = useSession();
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -267,7 +275,7 @@ export default function Navbar() {
             <>
               <div className="grid grid-cols-2 gap-3">
                 <Link
-                  href="/login"
+                  href={loginHref}
                   onClick={() => setMobileOpen(false)}
                   className="flex h-10 items-center justify-center rounded-md border border-border text-sm font-medium"
                 >
@@ -374,7 +382,7 @@ export default function Navbar() {
                 ) : (
                   <>
                     <Link
-                      href="/login"
+                      href={loginHref}
                       className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium transition-colors hover:bg-accent/10"
                     >
                       Log In

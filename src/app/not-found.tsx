@@ -37,7 +37,7 @@ export default function NotFound() {
 
         <Link
           href="/"
-          className="mt-8 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-purple-600/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-600/40"
+          className="mt-8 inline-flex items-center justify-center rounded-xl bg-linear-to-r from-violet-600 to-purple-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-purple-600/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-600/40"
         >
           Return to Home
         </Link>

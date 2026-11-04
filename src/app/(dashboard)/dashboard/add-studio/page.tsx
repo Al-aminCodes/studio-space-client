@@ -207,8 +207,8 @@ export default function AddStudioPage() {
 
   if (isPending) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center bg-[var(--background)] text-[var(--foreground)]">
-        <Loader2 className="mr-3 h-6 w-6 animate-spin text-[var(--accent)]" />
+      <div className="flex min-h-[60vh] items-center justify-center bg-background text-foreground">
+        <Loader2 className="mr-3 h-6 w-6 animate-spin text-accent" />
         Loading your account...
       </div>
     );

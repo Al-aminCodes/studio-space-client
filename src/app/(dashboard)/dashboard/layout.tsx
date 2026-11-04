@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, X } from "lucide-react";
+
 import { useSession } from "@/lib/auth-client";
 
 import Sidebar from "@/components/second-layout/sidebar";

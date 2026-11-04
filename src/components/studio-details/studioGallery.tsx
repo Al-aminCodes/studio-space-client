@@ -132,7 +132,7 @@ export default function StudioGallery({
 
   return (
     <div>
-      <div className="relative h-[280px] overflow-hidden rounded-2xl border sm:h-[420px]">
+      <div className="relative h-70 overflow-hidden rounded-2xl border sm:h-105">
         {activeImage ? (
           <Image
             key={activeImage}
@@ -149,7 +149,7 @@ export default function StudioGallery({
           </div>
         )}
 
-        <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 to-transparent p-5">
+        <div className="absolute inset-x-0 bottom-0 z-10 bg-linear-to-t from-black/80 to-transparent p-5">
           <span className="rounded-md bg-white px-3 py-1 text-sm text-gray-900">
             {studio.category}
           </span>
@@ -233,7 +233,7 @@ export default function StudioGallery({
             <Button
               type="button"
               onClick={() => setShowImageInput(true)}
-              className="gap-2 text-white"
+              className="gap-2 text-foreground bg-[#ff6a00] hover:bg-[#ff6a00]/90"
             >
               <FiPlus size={18} />
               Add Image

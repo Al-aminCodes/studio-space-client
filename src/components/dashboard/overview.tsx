@@ -51,6 +51,7 @@ export default function DashboardOverview({
   onNavigate,
   onEdit,
 }: Props) {
+  console.log(studios, bookings);
   const stats = [
     {
       label: "Total Studios",
@@ -77,6 +78,21 @@ export default function DashboardOverview({
       icon: Clock3,
     },
   ];
+  const formatDate = (date?: string) => {
+    if (!date) return "Date not provided";
+
+    const parsed = new Date(date);
+
+    if (Number.isNaN(parsed.getTime())) return "Invalid date";
+
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(parsed);
+  };
 
   return (
     <div className="space-y-8">
@@ -151,22 +167,22 @@ export default function DashboardOverview({
         <div className="mt-5 space-y-3">
           {studios.slice(0, 3).map((studio) => (
             <article
-              key={studio.id}
+              key={studio._id}
               className="flex flex-col gap-3 rounded-xl border border-border p-3 sm:flex-row sm:items-center"
             >
               <img
-                src={studio.image}
-                alt={studio.name}
+                src={studio.imageUrl}
+                alt={studio.title}
                 className="h-32 w-full rounded-lg object-cover sm:size-20"
               />
 
               <div className="min-w-0 flex-1">
-                <h4 className="font-semibold">{studio.name}</h4>
+                <h4 className="font-semibold">{studio.title}</h4>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {studio.category} · {studio.location}
                 </p>
                 <p className="mt-2 text-sm font-bold">
-                  {money(studio.price)}
+                  {money(studio.hourlyRate)}
                   <span className="font-normal text-muted-foreground">
                     {" "}
                     / hour
@@ -228,18 +244,27 @@ export default function DashboardOverview({
             <tbody>
               {bookings.slice(0, 3).map((booking) => (
                 <tr
-                  key={booking.id}
+                  key={booking._id}
                   className="border-b border-border/70 last:border-0"
                 >
-                  <td className="px-3 py-4 font-medium">{booking.studio}</td>
-                  <td className="px-3 py-4 text-muted-foreground">
-                    {booking.customer}
+                  <td className="px-3 py-4 font-medium">
+                    <div className="flex items-center gap-3 text-foreground font-bold">
+                      <img
+                        src={booking.imageUrl}
+                        alt={booking.studioTitle}
+                        className="h-32 w-full rounded-lg object-cover sm:size-20"
+                      />
+                      {booking.studioTitle}
+                    </div>
                   </td>
                   <td className="px-3 py-4 text-muted-foreground">
-                    {booking.date}
+                    {booking.userName}
+                  </td>
+                  <td className="px-3 py-4 text-muted-foreground">
+                    at {formatDate(booking.bookingDate)}
                   </td>
                   <td className="px-3 py-4 font-semibold">
-                    {money(booking.amount)}
+                    {money(booking.hourlyRate)}
                   </td>
                   <td className="px-3 py-4">
                     <StatusBadge status={booking.status} />

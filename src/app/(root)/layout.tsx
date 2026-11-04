@@ -1,3 +1,4 @@
+
 import Footer from "@/components/layout/footer";
 import Navbar from "@/components/layout/navbar";
 import { ThemeProvider } from "@/components/providers/theme-provider";
@@ -15,6 +16,7 @@ export default function RootLayout({
       enableSystem={false}
       disableTransitionOnChange
     >
+     
       <Navbar />
       {children}
       <Footer />
