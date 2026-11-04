@@ -310,6 +310,12 @@ export default function MyBookingsPage() {
                       </td>
 
                       <td className="px-5 py-4 text-right">
+                        <Link
+                          href={`/studios/${booking.studioId}`}
+                          className="mr-3 inline-flex items-center gap-1.5 rounded-lg border border-accent/30 px-3 py-2 text-xs font-semibold text-accent hover:bg-accent/10"
+                        >
+                          View Studio
+                        </Link>
                         {booking.status !== "Cancelled" ? (
                           <button
                             onClick={() => handleCancel(booking)}
